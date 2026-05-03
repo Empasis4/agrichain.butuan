@@ -27,6 +27,8 @@ import FarmerOrders from './pages/Farmer/Orders';
 // Axios will naturally use the current domain, so no baseURL config is needed!
 axios.defaults.baseURL = '';
 
+import { ToastProvider } from './components/Toast';
+
 function App() {
   const [user, setUser] = React.useState(() => {
     try {
@@ -44,8 +46,9 @@ function App() {
       return null;
     }
   });
-  const [toast, setToast] = React.useState(null);
   const [lastNotifId, setLastNotifId] = React.useState(0);
+
+  const { showToast } = useToast();
 
   React.useEffect(() => {
     if (!user) return;
@@ -56,9 +59,8 @@ function App() {
         const latest = res.data[0];
         if (latest && latest.id > lastNotifId) {
           setLastNotifId(latest.id);
-          if (lastNotifId !== 0) { // Don't toast on initial load
-            setToast(latest);
-            setTimeout(() => setToast(null), 5000);
+          if (lastNotifId !== 0) {
+            showToast(latest.message, 'success');
           }
         }
       } catch (err) {
@@ -83,9 +85,9 @@ function App() {
     localStorage.setItem('agrichain_user', JSON.stringify(userData));
   };
 
-  if (!user) {
-    return (
-      <Router>
+  return (
+    <Router>
+      {!user ? (
         <div className="app-container">
           <div className="page-transition">
             <Routes>
@@ -95,61 +97,35 @@ function App() {
             </Routes>
           </div>
         </div>
-      </Router>
-    );
-  }
-
-  return (
-    <Router>
-      <div className="app-shell">
-        <main className="app-container">
-          <div className="page-transition">
-            <Routes>
-              <Route path="/" element={
-                user.role === 'admin' ? <AdminDashboard user={user} /> : 
-                user.role === 'farmer' ? <FarmerDashboard user={user} /> : 
-                <RetailerDashboard user={user} />
-              } />
-              <Route path="/marketplace" element={<Marketplace user={user} />} />
-              <Route path="/checkout" element={<Checkout user={user} />} />
-              <Route path="/order-success" element={<OrderSuccess />} />
-              <Route path="/orders" element={user.role === 'farmer' ? <FarmerOrders user={user} /> : <RetailerOrders user={user} />} />
-              <Route path="/orders/:id" element={<OrderDetail user={user} />} />
-              <Route path="/orders/:id/track" element={<OrderTracking user={user} />} />
-              <Route path="/notifications" element={<Notifications user={user} />} />
-              <Route path="/farmer/manage" element={<ManageHarvests user={user} />} />
-              <Route path="/admin/verify" element={<TransactionVerification user={user} />} />
-              <Route path="/admin/users" element={<UserVerification user={user} />} />
-              <Route path="/profile" element={<Profile user={user} onLogout={() => {
-                setUser(null);
-                localStorage.removeItem('agrichain_user');
-              }} />} />
-              <Route path="*" element={<Navigate to="/" />} />
-            </Routes>
-          </div>
-        </main>
-        <Navigation role={user.role} />
-      </div>
-
-      {/* Real-time Toast Notification */}
-      {toast && (
-        <div 
-          className="page-transition"
-          style={{ 
-            position: 'fixed', top: '20px', left: '50%', transform: 'translateX(-50%)', 
-            width: 'calc(100% - 40px)', maxWidth: '400px', background: 'var(--primary)', 
-            color: '#fff', padding: '16px', borderRadius: '16px', boxShadow: 'var(--shadow-md)',
-            display: 'flex', gap: '12px', alignItems: 'center', zIndex: 10000
-          }}
-        >
-          <div style={{ background: 'rgba(255,255,255,0.2)', padding: '8px', borderRadius: '10px' }}>
-            <Bell size={20} />
-          </div>
-          <div style={{ flex: 1 }}>
-            <p style={{ fontWeight: '700', fontSize: '0.9rem' }}>{toast.title}</p>
-            <p style={{ fontSize: '0.8rem', opacity: 0.9 }}>{toast.message}</p>
-          </div>
-          <X size={18} style={{ cursor: 'pointer', opacity: 0.7 }} onClick={() => setToast(null)} />
+      ) : (
+        <div className="app-shell">
+          <main className="app-container">
+            <div className="page-transition">
+              <Routes>
+                <Route path="/" element={
+                  user.role === 'admin' ? <AdminDashboard user={user} /> : 
+                  user.role === 'farmer' ? <FarmerDashboard user={user} /> : 
+                  <RetailerDashboard user={user} />
+                } />
+                <Route path="/marketplace" element={<Marketplace user={user} />} />
+                <Route path="/checkout" element={<Checkout user={user} />} />
+                <Route path="/order-success" element={<OrderSuccess />} />
+                <Route path="/orders" element={user.role === 'farmer' ? <FarmerOrders user={user} /> : <RetailerOrders user={user} />} />
+                <Route path="/orders/:id" element={<OrderDetail user={user} />} />
+                <Route path="/orders/:id/track" element={<OrderTracking user={user} />} />
+                <Route path="/notifications" element={<Notifications user={user} />} />
+                <Route path="/farmer/manage" element={<ManageHarvests user={user} />} />
+                <Route path="/admin/verify" element={<TransactionVerification user={user} />} />
+                <Route path="/admin/users" element={<UserVerification user={user} />} />
+                <Route path="/profile" element={<Profile user={user} onLogout={() => {
+                  setUser(null);
+                  localStorage.removeItem('agrichain_user');
+                }} />} />
+                <Route path="*" element={<Navigate to="/" />} />
+              </Routes>
+            </div>
+          </main>
+          <Navigation role={user.role} />
         </div>
       )}
     </Router>

@@ -50,6 +50,17 @@ class OrderController extends Controller
                 'quantity' => $item['quantity'],
                 'price_at_time' => $item['price_at_time'],
             ]);
+
+            // Decrement the stock of the product automatically
+            $product = \App\Models\Product::find($item['product_id']);
+            if ($product) {
+                $product->quantity_available -= $item['quantity'];
+                // Prevent negative stock
+                if ($product->quantity_available < 0) {
+                    $product->quantity_available = 0;
+                }
+                $product->save();
+            }
         }
 
         return response()->json($order->load('items'), 201);

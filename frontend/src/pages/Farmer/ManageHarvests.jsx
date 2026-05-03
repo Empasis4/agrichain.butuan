@@ -1,11 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Plus, Edit2, Trash2, Tag, Info } from 'lucide-react';
+import { Plus, Edit2, Trash2, Tag, Info, AlertTriangle } from 'lucide-react';
+import { useToast } from '../../components/Toast';
+import Modal from '../../components/Modal';
 
 const ManageHarvests = ({ user }) => {
+  const { showToast } = useToast();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showAddForm, setShowAddForm] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [productToDelete, setProductToDelete] = useState(null);
   const [newProduct, setNewProduct] = useState({
     name: '',
     category: 'Vegetables',
@@ -42,27 +47,35 @@ const ManageHarvests = ({ user }) => {
         const res = await axios.put(`/api/products/${editingId}`, newProduct);
         setProducts(products.map(p => p.id === editingId ? res.data : p));
         setEditingId(null);
+        showToast('Harvest updated successfully!', 'success');
       } else {
         const res = await axios.post('/api/products', { 
           ...newProduct, 
           farmer_id: user.id || 1 
         });
         setProducts([...products, res.data]);
+        showToast('Harvest listed successfully!', 'success');
       }
       setShowAddForm(false);
       setNewProduct({ name: '', category: 'Vegetables', price_per_kg: '', quantity_available: '', unit: 'kg', harvest_date: new Date().toISOString().split('T')[0], description: '', image_path: '' });
     } catch (error) {
-      alert('Error: ' + (error.response?.data?.message || error.message));
+      showToast('Error: ' + (error.response?.data?.message || error.message), 'error');
     }
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this harvest?')) return;
+  const confirmDelete = (id) => {
+    setProductToDelete(id);
+    setShowDeleteModal(true);
+  };
+
+  const handleDelete = async () => {
     try {
-      await axios.delete(`/api/products/${id}`);
-      setProducts(products.filter(p => p.id !== id));
+      await axios.delete(`/api/products/${productToDelete}`);
+      setProducts(products.filter(p => p.id !== productToDelete));
+      showToast('Harvest deleted successfully', 'success');
+      setShowDeleteModal(false);
     } catch (error) {
-      alert('Error deleting product');
+      showToast('Error deleting product', 'error');
     }
   };
 
@@ -77,7 +90,7 @@ const ManageHarvests = ({ user }) => {
     <div className="manage-harvests">
       <header style={{ marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
-          <h1 style={{ fontSize: '1.5rem' }}>My Harvests</h1>
+          <h1 style={{ fontSize: '1.5rem', fontWeight: '800' }}>My Harvests</h1>
           <p style={{ color: 'var(--text-muted)' }}>Inventory control & pricing</p>
         </div>
         <button 
@@ -90,23 +103,22 @@ const ManageHarvests = ({ user }) => {
       </header>
 
       {showAddForm && (
-        <div className="card" style={{ marginBottom: '24px', border: '1px solid var(--primary)' }}>
-          <h3 style={{ marginBottom: '16px' }}>{editingId ? 'Edit Harvest' : 'List New Harvest'}</h3>
+        <div className="card" style={{ marginBottom: '24px', border: '1px solid var(--primary)', animation: 'slideUp 0.4s ease' }}>
+          <h3 style={{ marginBottom: '16px', fontWeight: '800' }}>{editingId ? 'Edit Harvest' : 'List New Harvest'}</h3>
           <form onSubmit={handleAddProduct} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             <input 
               type="text" placeholder="Product Name (e.g. Red Onions)" required className="input" 
               value={newProduct.name} onChange={e => setNewProduct({...newProduct, name: e.target.value})}
-              style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #ddd' }}
             />
             <div style={{ display: 'flex', gap: '8px' }}>
               <input 
                 type="number" placeholder="Price" required className="input" 
                 value={newProduct.price_per_kg} onChange={e => setNewProduct({...newProduct, price_per_kg: e.target.value})}
-                style={{ flex: 1, padding: '12px', borderRadius: '8px', border: '1px solid #ddd' }}
+                style={{ flex: 1 }}
               />
               <select 
                 className="input" value={newProduct.unit} onChange={e => setNewProduct({...newProduct, unit: e.target.value})}
-                style={{ width: '80px', padding: '12px', borderRadius: '8px', border: '1px solid #ddd' }}
+                style={{ width: '100px' }}
               >
                 <option value="kg">kg</option>
                 <option value="bundle">bundle</option>
@@ -116,15 +128,13 @@ const ManageHarvests = ({ user }) => {
             <input 
               type="number" placeholder="Available Quantity" required className="input" 
               value={newProduct.quantity_available} onChange={e => setNewProduct({...newProduct, quantity_available: e.target.value})}
-              style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #ddd' }}
             />
             <input 
-              type="text" placeholder="Product Image URL (e.g. https://example.com/onions.jpg)" className="input" 
+              type="text" placeholder="Product Image URL (e.g. https://...)" className="input" 
               value={newProduct.image_path} onChange={e => setNewProduct({...newProduct, image_path: e.target.value})}
-              style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #ddd' }}
             />
-            <div style={{ display: 'flex', gap: '8px' }}>
-              <button type="button" onClick={() => setShowAddForm(false)} className="btn" style={{ flex: 1, background: '#eee' }}>Cancel</button>
+            <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
+              <button type="button" onClick={() => setShowAddForm(false)} className="btn" style={{ flex: 1, background: '#eee', color: 'var(--text-main)' }}>Cancel</button>
               <button type="submit" className="btn btn-primary" style={{ flex: 2 }}>{editingId ? 'Update Harvest' : 'Publish Harvest'}</button>
             </div>
           </form>
@@ -137,27 +147,48 @@ const ManageHarvests = ({ user }) => {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
           {products.map((p) => (
             <div key={p.id} className="card" style={{ padding: '16px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                <div>
-                  <h3 style={{ fontSize: '1.1rem', marginBottom: '4px' }}>{p.name}</h3>
+              <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+                <div style={{ 
+                  width: '60px', height: '60px', background: '#f5f5f5', borderRadius: '12px', 
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem', overflow: 'hidden' 
+                }}>
+                  {p.image_path ? <img src={p.image_path} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : '📦'}
+                </div>
+                <div style={{ flex: 1 }}>
+                  <h3 style={{ fontSize: '1rem', fontWeight: '700', marginBottom: '4px' }}>{p.name}</h3>
                   <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                    <span style={{ fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--primary)', fontWeight: '600' }}>
-                      <Tag size={14} /> ₱{p.price_per_kg}/{p.unit}
+                    <span style={{ fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--primary)', fontWeight: '700' }}>
+                      ₱{p.price_per_kg}/{p.unit}
                     </span>
-                    <span style={{ fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--text-muted)' }}>
-                      <Info size={14} /> {p.quantity_available} {p.unit} left
+                    <span style={{ fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--text-muted)' }}>
+                      {p.quantity_available} {p.unit} left
                     </span>
                   </div>
                 </div>
                 <div style={{ display: 'flex', gap: '8px' }}>
-                  <button onClick={() => handleEdit(p)} style={{ background: '#f5f5f5', border: 'none', padding: '8px', borderRadius: '8px', cursor: 'pointer' }}><Edit2 size={16} /></button>
-                  <button onClick={() => handleDelete(p.id)} style={{ background: '#ffebee', border: 'none', padding: '8px', borderRadius: '8px', color: 'var(--danger)', cursor: 'pointer' }}><Trash2 size={16} /></button>
+                  <button onClick={() => handleEdit(p)} style={{ background: '#f5f5f5', border: 'none', padding: '10px', borderRadius: '10px', cursor: 'pointer' }}><Edit2 size={16} /></button>
+                  <button onClick={() => confirmDelete(p.id)} style={{ background: '#ffebee', border: 'none', padding: '10px', borderRadius: '10px', color: 'var(--danger)', cursor: 'pointer' }}><Trash2 size={16} /></button>
                 </div>
               </div>
             </div>
           ))}
         </div>
       )}
+
+      <Modal 
+        isOpen={showDeleteModal} 
+        onClose={() => setShowDeleteModal(false)}
+        title="Delete Harvest?"
+        footer={<>
+          <button onClick={() => setShowDeleteModal(false)} className="btn" style={{ width: 'auto', background: '#eee' }}>Cancel</button>
+          <button onClick={handleDelete} className="btn btn-primary" style={{ width: 'auto', background: 'var(--danger)' }}>Delete</button>
+        </>}
+      >
+        <div style={{ textAlign: 'center', padding: '10px 0' }}>
+          <AlertTriangle size={48} color="var(--danger)" style={{ marginBottom: '16px', opacity: 0.8 }} />
+          <p style={{ color: 'var(--text-muted)' }}>This action cannot be undone. Are you sure you want to remove this harvest listing?</p>
+        </div>
+      </Modal>
     </div>
   );
 };

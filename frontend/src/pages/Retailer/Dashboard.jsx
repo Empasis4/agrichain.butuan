@@ -1,5 +1,5 @@
 import React from 'react';
-import { TrendingUp, AlertTriangle, Package, ChevronRight, ShoppingCart } from 'lucide-react';
+import { TrendingUp, AlertTriangle, Package, ChevronRight, ShoppingCart, Bell } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
@@ -29,9 +29,13 @@ const RetailerDashboard = ({ user }) => {
       const res = await axios.get(`/api/orders/retailer/${user.id}`);
       const active = res.data.filter(o => o.status !== 'delivered' && o.status !== 'cancelled').length;
       const totalSourced = res.data
-        .filter(o => o.status === 'delivered')
+        .filter(o => o.status !== 'cancelled')
         .reduce((sum, o) => sum + parseFloat(o.total_price || 0), 0);
-      setStats({ active_orders: active, total_sourced: totalSourced });
+      setStats({ 
+        active_orders: active, 
+        total_sourced: totalSourced,
+        total_orders: res.data.length
+      });
     } catch (err) {
       console.error('Retailer stats error:', err);
     }
@@ -46,9 +50,9 @@ const RetailerDashboard = ({ user }) => {
         </div>
         <div 
           onClick={() => navigate('/notifications')}
-          style={{ width: '40px', height: '40px', background: '#fff', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: 'var(--shadow-sm)' }}
+          style={{ width: '40px', height: '40px', background: '#fff', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: 'var(--shadow-sm)', cursor: 'pointer' }}
         >
-          <TrendingUp size={20} color="var(--primary)" />
+          <Bell size={20} color="var(--primary)" />
         </div>
       </header>
 

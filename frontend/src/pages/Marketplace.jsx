@@ -52,7 +52,10 @@ const Marketplace = ({ user }) => {
       <header style={{ marginBottom: '24px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
           <h1 style={{ fontSize: '1.5rem', fontWeight: '800' }}>Marketplace</h1>
-          <div style={{ position: 'relative' }}>
+          <div 
+            onClick={() => navigate('/orders')}
+            style={{ position: 'relative', cursor: 'pointer' }}
+          >
             <ShoppingBag size={24} color="var(--primary)" />
             <span style={{ position: 'absolute', top: '-5px', right: '-5px', background: 'var(--danger)', color: '#fff', borderRadius: '50%', width: '16px', height: '16px', fontSize: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '700' }}>2</span>
           </div>

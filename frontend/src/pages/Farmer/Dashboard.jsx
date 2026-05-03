@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Package, TrendingUp, Plus, ChevronRight, Info, Calendar } from 'lucide-react';
+import { Package, TrendingUp, Plus, ChevronRight, Info, Calendar, Bell } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const FarmerDashboard = ({ user }) => {
@@ -43,12 +43,20 @@ const FarmerDashboard = ({ user }) => {
           <h1 style={{ fontSize: '1.5rem', fontWeight: '800' }}>Farmer Hub</h1>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Welcome, {user?.name || 'Farmer'}!</p>
         </div>
-        <button 
-          onClick={() => navigate('/farmer/manage')}
-          style={{ width: '40px', height: '40px', background: 'var(--primary)', color: '#fff', border: 'none', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: 'var(--shadow-sm)' }}
-        >
-          <Plus size={24} />
-        </button>
+        <div style={{ display: 'flex', gap: '12px' }}>
+          <div 
+            onClick={() => navigate('/notifications')}
+            style={{ width: '40px', height: '40px', background: '#fff', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: 'var(--shadow-sm)', cursor: 'pointer' }}
+          >
+            <Bell size={20} color="var(--primary)" />
+          </div>
+          <button 
+            onClick={() => navigate('/farmer/manage')}
+            style={{ width: '40px', height: '40px', background: 'var(--primary)', color: '#fff', border: 'none', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: 'var(--shadow-sm)', cursor: 'pointer' }}
+          >
+            <Plus size={24} />
+          </button>
+        </div>
       </header>
 
       {/* Stats Cards */}
