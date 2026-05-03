@@ -20,7 +20,11 @@ const Login = ({ onLogin }) => {
       onLogin(user.role, user);
     } catch (error) {
       console.error('Login error:', error);
-      alert('Invalid credentials. Please try again.');
+      if (error.response && error.response.status === 401) {
+        alert('Invalid credentials. Please try again.');
+      } else {
+        alert('Server Error: ' + (error.response?.data?.message || error.message) + '. Please check Railway deployment logs.');
+      }
     }
   };
 

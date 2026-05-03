@@ -17,6 +17,16 @@ use Illuminate\Support\Facades\Route;
 Route::post('register', [\App\Http\Controllers\AuthController::class, 'register']);
 Route::post('login', [\App\Http\Controllers\AuthController::class, 'login']);
 
+Route::get('/health', function () {
+    try {
+        \Illuminate\Support\Facades\DB::connection()->getPdo();
+        $userCount = \App\Models\User::count();
+        return response()->json(['status' => 'ok', 'message' => 'Connected to DB. Users: ' . $userCount]);
+    } catch (\Exception $e) {
+        return response()->json(['status' => 'error', 'message' => 'DB Connection Failed: ' . $e->getMessage()], 500);
+    }
+});
+
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
