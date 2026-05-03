@@ -5,6 +5,11 @@ use Illuminate\Support\Str;
 $mysqlUrl = env('MYSQL_URL', env('DATABASE_URL'));
 $parsedMysqlUrl = $mysqlUrl ? parse_url($mysqlUrl) : [];
 
+$sqlitePath = env('DB_DATABASE', database_path('database.sqlite'));
+if (!file_exists($sqlitePath) && is_dir(dirname($sqlitePath))) {
+    touch($sqlitePath);
+}
+
 return [
 
     /*
