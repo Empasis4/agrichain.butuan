@@ -5,7 +5,6 @@
   },
   "deploy": {
     "startCommand": "php artisan migrate --force && php -S 0.0.0.0:$PORT -t public",
-    "healthcheckPath": "/api/admin/stats",
     "restartPolicyType": "ON_FAILURE",
     "restartPolicyMaxRetries": 3
   }
