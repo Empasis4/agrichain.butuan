@@ -1,0 +1,198 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+:root {
+  --primary: #2E7D32;
+  --primary-light: #E8F5E9;
+  --accent: #FBC02D;
+  --danger: #D32F2F;
+  --warning: #FFA000;
+  --background: #F8F9FA;
+  --card-bg: #FFFFFF;
+  --text-main: #1A1A1A;
+  --text-muted: #666666;
+  --nav-bg: rgba(255, 255, 255, 0.95);
+  --shadow-sm: 0 2px 8px rgba(0,0,0,0.05);
+  --shadow-md: 0 8px 24px rgba(0,0,0,0.08);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background-color: var(--background);
+  color: var(--text-main);
+  line-height: 1.5;
+  overflow-x: hidden;
+}
+
+.app-container {
+  max-width: 500px;
+  margin: 0 auto;
+  min-height: 100vh;
+  padding: 20px 20px 180px 20px; /* Increased to account for Bottom Nav + FAB */
+  position: relative;
+  width: 100%;
+}
+
+/* Animations */
+@keyframes slideUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { transform: scale(0.95); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+.page-transition {
+  animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Cards & Elements */
+.card {
+  background: var(--card-bg);
+  border-radius: 16px;
+  padding: 16px; /* Slightly reduced for better mobile space */
+  margin-bottom: 16px;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid rgba(0,0,0,0.03);
+  transition: transform 0.2s, box-shadow 0.2s;
+  position: relative;
+}
+
+.card:active {
+  transform: scale(0.98);
+}
+
+.btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: none;
+  border-radius: 12px;
+  padding: 14px 20px;
+  font-weight: 700; /* Bolder for accessibility */
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  width: 100%;
+}
+
+.btn-primary {
+  background: var(--primary);
+  color: white;
+  box-shadow: 0 4px 12px rgba(46, 125, 50, 0.2);
+}
+
+.btn-primary:active {
+  background: #1B5E20;
+  transform: scale(0.97);
+}
+
+.input {
+  width: 100%;
+  padding: 16px;
+  border-radius: 12px;
+  border: 1px solid #E0E0E0;
+  background: #fff;
+  font-family: inherit;
+  font-size: 1rem;
+  transition: all 0.2s;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
+}
+
+.input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 4px rgba(46, 125, 50, 0.1);
+  outline: none;
+}
+
+/* Badges */
+.badge {
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 0.7rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.badge-primary { background: var(--primary-light); color: var(--primary); }
+.badge-fair { background: #FFF9C4; color: #FBC02D; }
+.badge-cheap { background: #E8F5E9; color: var(--primary); }
+.badge-pending { background: #FFF3E0; color: #E65100; }
+.badge-expensive { background: #FFEBEE; color: var(--danger); }
+
+/* Navigation */
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 500px;
+  height: 85px;
+  background: var(--nav-bg);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  border-top: 1px solid rgba(0,0,0,0.08);
+  padding-bottom: 25px;
+  z-index: 1000;
+}
+
+.nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 0.75rem;
+  font-weight: 600;
+  transition: all 0.3s;
+}
+
+.nav-item.active {
+  color: var(--primary);
+}
+
+.nav-item svg {
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.nav-item.active svg {
+  transform: translateY(-4px) scale(1.1);
+}
+
+/* Floating Action Button Style */
+.fab {
+  position: fixed;
+  bottom: 100px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(100% - 40px);
+  max-width: 460px;
+  height: 56px;
+  border-radius: 16px;
+  background: var(--primary);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-md);
+  z-index: 900;
+  font-weight: 700;
+  border: none;
+  gap: 12px;
+}

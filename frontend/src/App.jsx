@@ -1,0 +1,157 @@
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import axios from 'axios';
+import { Bell, X } from 'lucide-react';
+import Navigation from './components/Navigation';
+import Login from './pages/Login';
+import Register from './pages/Register';
+import RetailerDashboard from './pages/Retailer/Dashboard';
+import FarmerDashboard from './pages/Farmer/Dashboard';
+import Marketplace from './pages/Marketplace';
+import Checkout from './pages/Checkout';
+import OrderSuccess from './pages/OrderSuccess';
+import AdminDashboard from './pages/Admin/Dashboard';
+import TransactionVerification from './pages/Admin/TransactionVerification';
+import UserVerification from './pages/Admin/UserVerification';
+import ManageHarvests from './pages/Farmer/ManageHarvests';
+import RetailerOrders from './pages/Retailer/Orders';
+import OrderDetail from './pages/Retailer/OrderDetail';
+import OrderTracking from './pages/Retailer/OrderTracking';
+import Notifications from './pages/Notifications';
+import Profile from './pages/Profile';
+import './index.css';
+
+import FarmerOrders from './pages/Farmer/Orders';
+
+// Axios uses relative /api/* paths — proxied to :8000 by Vite
+
+function App() {
+  const [user, setUser] = React.useState(() => {
+    try {
+      const saved = localStorage.getItem('agrichain_user');
+      if (!saved) return null;
+      const parsed = JSON.parse(saved);
+      // Validate session — must have a real numeric id and a role
+      if (!parsed?.id || !parsed?.role) {
+        localStorage.removeItem('agrichain_user');
+        return null;
+      }
+      return parsed;
+    } catch {
+      localStorage.removeItem('agrichain_user');
+      return null;
+    }
+  });
+  const [toast, setToast] = React.useState(null);
+  const [lastNotifId, setLastNotifId] = React.useState(0);
+
+  React.useEffect(() => {
+    if (!user) return;
+
+    const pollNotifications = async () => {
+      try {
+        const res = await axios.get(`/api/notifications?user_id=${user.id}`);
+        const latest = res.data[0];
+        if (latest && latest.id > lastNotifId) {
+          setLastNotifId(latest.id);
+          if (lastNotifId !== 0) { // Don't toast on initial load
+            setToast(latest);
+            setTimeout(() => setToast(null), 5000);
+          }
+        }
+      } catch (err) {
+        console.error('Polling error:', err);
+      }
+    };
+
+    const interval = setInterval(pollNotifications, 10000);
+    pollNotifications(); // Initial check
+    return () => clearInterval(interval);
+  }, [user, lastNotifId]);
+
+  const handleLogin = (role = 'retailer', data = null) => {
+    if (!data) return;
+    const userData = {
+      ...data,
+      role: role || data.role,
+      name: data.name || (role === 'admin' ? 'Admin' : 'User'),
+    };
+    console.log('Logging in user:', userData);
+    setUser(userData);
+    localStorage.setItem('agrichain_user', JSON.stringify(userData));
+  };
+
+  if (!user) {
+    return (
+      <Router>
+        <div className="app-container">
+          <div className="page-transition">
+            <Routes>
+              <Route path="/login" element={<Login onLogin={(role, data) => handleLogin(role, data)} />} />
+              <Route path="/register" element={<Register onRegister={(role, data) => handleLogin(role, data)} />} />
+              <Route path="*" element={<Navigate to="/login" />} />
+            </Routes>
+          </div>
+        </div>
+      </Router>
+    );
+  }
+
+  return (
+    <Router>
+      <div className="app-shell">
+        <main className="app-container">
+          <div className="page-transition">
+            <Routes>
+              <Route path="/" element={
+                user.role === 'admin' ? <AdminDashboard user={user} /> : 
+                user.role === 'farmer' ? <FarmerDashboard user={user} /> : 
+                <RetailerDashboard user={user} />
+              } />
+              <Route path="/marketplace" element={<Marketplace user={user} />} />
+              <Route path="/checkout" element={<Checkout user={user} />} />
+              <Route path="/order-success" element={<OrderSuccess />} />
+              <Route path="/orders" element={user.role === 'farmer' ? <FarmerOrders user={user} /> : <RetailerOrders user={user} />} />
+              <Route path="/orders/:id" element={<OrderDetail user={user} />} />
+              <Route path="/orders/:id/track" element={<OrderTracking user={user} />} />
+              <Route path="/notifications" element={<Notifications user={user} />} />
+              <Route path="/farmer/manage" element={<ManageHarvests user={user} />} />
+              <Route path="/admin/verify" element={<TransactionVerification user={user} />} />
+              <Route path="/admin/users" element={<UserVerification user={user} />} />
+              <Route path="/profile" element={<Profile user={user} onLogout={() => {
+                setUser(null);
+                localStorage.removeItem('agrichain_user');
+              }} />} />
+              <Route path="*" element={<Navigate to="/" />} />
+            </Routes>
+          </div>
+        </main>
+        <Navigation role={user.role} />
+      </div>
+
+      {/* Real-time Toast Notification */}
+      {toast && (
+        <div 
+          className="page-transition"
+          style={{ 
+            position: 'fixed', top: '20px', left: '50%', transform: 'translateX(-50%)', 
+            width: 'calc(100% - 40px)', maxWidth: '400px', background: 'var(--primary)', 
+            color: '#fff', padding: '16px', borderRadius: '16px', boxShadow: 'var(--shadow-md)',
+            display: 'flex', gap: '12px', alignItems: 'center', zIndex: 10000
+          }}
+        >
+          <div style={{ background: 'rgba(255,255,255,0.2)', padding: '8px', borderRadius: '10px' }}>
+            <Bell size={20} />
+          </div>
+          <div style={{ flex: 1 }}>
+            <p style={{ fontWeight: '700', fontSize: '0.9rem' }}>{toast.title}</p>
+            <p style={{ fontSize: '0.8rem', opacity: 0.9 }}>{toast.message}</p>
+          </div>
+          <X size={18} style={{ cursor: 'pointer', opacity: 0.7 }} onClick={() => setToast(null)} />
+        </div>
+      )}
+    </Router>
+  );
+}
+
+export default App;
