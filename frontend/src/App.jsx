@@ -23,11 +23,9 @@ import './index.css';
 
 import FarmerOrders from './pages/Farmer/Orders';
 
-// In production, fallback directly to your chosen Railway backend URL to prevent 404s
-// In dev, use empty string so Vite proxy handles it to localhost:8000
-axios.defaults.baseURL = import.meta.env.DEV 
-  ? '' 
-  : (import.meta.env.VITE_API_URL || 'https://AgrichainButuan.up.railway.app');
+// Since Laravel is now serving the frontend directly, they share the exact same domain.
+// Axios will naturally use the current domain, so no baseURL config is needed!
+axios.defaults.baseURL = '';
 
 function App() {
   const [user, setUser] = React.useState(() => {
