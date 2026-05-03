@@ -33,6 +33,11 @@ return [
     |
     */
 
+    /*
+    |--------------------------------------------------------------------------
+    | Manual URL Parsing for Railway
+    |--------------------------------------------------------------------------
+    */
     'connections' => [
 
         'sqlite' => [
@@ -43,14 +48,8 @@ return [
             'foreign_key_constraints' => env('DB_FOREIGN_KEYS', true),
         ],
 
-        'mysql' => [
+        'mysql' => array_merge([
             'driver' => 'mysql',
-            'url' => env('MYSQL_URL', env('DATABASE_URL')),
-            'host' => env('MYSQLHOST', env('DB_HOST', '127.0.0.1')),
-            'port' => env('MYSQLPORT', env('DB_PORT', '3306')),
-            'database' => env('MYSQLDATABASE', env('DB_DATABASE', 'forge')),
-            'username' => env('MYSQLUSER', env('DB_USERNAME', 'forge')),
-            'password' => env('MYSQLPASSWORD', env('DB_PASSWORD', '')),
             'unix_socket' => env('DB_SOCKET', ''),
             'charset' => 'utf8mb4',
             'collation' => 'utf8mb4_unicode_ci',
@@ -61,7 +60,17 @@ return [
             'options' => extension_loaded('pdo_mysql') ? array_filter([
                 PDO::MYSQL_ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
             ]) : [],
-        ],
+        ], (function () {
+            $url = env('MYSQL_URL', env('DATABASE_URL'));
+            $parsed = $url ? parse_url($url) : [];
+            return [
+                'host' => $parsed['host'] ?? env('MYSQLHOST', env('DB_HOST', '127.0.0.1')),
+                'port' => $parsed['port'] ?? env('MYSQLPORT', env('DB_PORT', '3306')),
+                'database' => isset($parsed['path']) ? ltrim($parsed['path'], '/') : env('MYSQLDATABASE', env('DB_DATABASE', 'forge')),
+                'username' => $parsed['user'] ?? env('MYSQLUSER', env('DB_USERNAME', 'forge')),
+                'password' => $parsed['pass'] ?? env('MYSQLPASSWORD', env('DB_PASSWORD', '')),
+            ];
+        })()),
 
         'pgsql' => [
             'driver' => 'pgsql',
