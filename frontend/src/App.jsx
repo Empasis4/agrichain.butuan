@@ -23,7 +23,9 @@ import './index.css';
 
 import FarmerOrders from './pages/Farmer/Orders';
 
-// Axios uses relative /api/* paths — proxied to :8000 by Vite
+// In production (Railway), set VITE_API_URL to your backend Railway URL
+// In dev, leave it empty — Vite proxy handles /api/* → localhost:8000
+axios.defaults.baseURL = import.meta.env.VITE_API_URL || '';
 
 function App() {
   const [user, setUser] = React.useState(() => {

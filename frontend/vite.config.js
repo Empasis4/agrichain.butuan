@@ -3,7 +3,7 @@ import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 
 // https://vitejs.dev/config/
-export default defineConfig({
+export default defineConfig(({ command }) => ({
   plugins: [
     react(),
     VitePWA({
@@ -17,27 +17,19 @@ export default defineConfig({
         background_color: '#F5F5F5',
         display: 'standalone',
         icons: [
-          {
-            src: 'pwa-192x192.png',
-            sizes: '192x192',
-            type: 'image/png'
-          },
-          {
-            src: 'pwa-512x512.png',
-            sizes: '512x512',
-            type: 'image/png'
-          },
-          {
-            src: 'pwa-512x512.png',
-            sizes: '512x512',
-            type: 'image/png',
-            purpose: 'any maskable'
-          }
+          { src: 'pwa-192x192.png', sizes: '192x192', type: 'image/png' },
+          { src: 'pwa-512x512.png', sizes: '512x512', type: 'image/png' },
+          { src: 'pwa-512x512.png', sizes: '512x512', type: 'image/png', purpose: 'any maskable' }
         ]
       }
     })
   ],
-  server: {
+  build: {
+    outDir: 'dist',
+    emptyOutDir: true,
+  },
+  // Only proxy in development — in production (Railway), VITE_API_URL is set
+  server: command === 'serve' ? {
     proxy: {
       '/api': {
         target: 'http://localhost:8000',
@@ -45,5 +37,5 @@ export default defineConfig({
         secure: false,
       }
     }
-  }
-})
+  } : {}
+}))
