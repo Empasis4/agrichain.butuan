@@ -2,6 +2,9 @@
 
 use Illuminate\Support\Str;
 
+$mysqlUrl = env('MYSQL_URL', env('DATABASE_URL'));
+$parsedMysqlUrl = $mysqlUrl ? parse_url($mysqlUrl) : [];
+
 return [
 
     /*
@@ -21,23 +24,8 @@ return [
     |--------------------------------------------------------------------------
     | Database Connections
     |--------------------------------------------------------------------------
-    |
-    | Here are each of the database connections setup for your application.
-    | Of course, examples of configuring each database platform that is
-    | supported by Laravel is shown below to make development simple.
-    |
-    |
-    | All database work in Laravel is done through the PHP PDO facilities
-    | so make sure you have the driver for your particular database of
-    | choice installed on your machine before you begin development.
-    |
     */
 
-    /*
-    |--------------------------------------------------------------------------
-    | Manual URL Parsing for Railway
-    |--------------------------------------------------------------------------
-    */
     'connections' => [
 
         'sqlite' => [
@@ -48,8 +36,13 @@ return [
             'foreign_key_constraints' => env('DB_FOREIGN_KEYS', true),
         ],
 
-        'mysql' => array_merge([
+        'mysql' => [
             'driver' => 'mysql',
+            'host' => $parsedMysqlUrl['host'] ?? env('MYSQLHOST', env('DB_HOST', '127.0.0.1')),
+            'port' => $parsedMysqlUrl['port'] ?? env('MYSQLPORT', env('DB_PORT', '3306')),
+            'database' => isset($parsedMysqlUrl['path']) ? ltrim($parsedMysqlUrl['path'], '/') : env('MYSQLDATABASE', env('DB_DATABASE', 'forge')),
+            'username' => $parsedMysqlUrl['user'] ?? env('MYSQLUSER', env('DB_USERNAME', 'forge')),
+            'password' => $parsedMysqlUrl['pass'] ?? env('MYSQLPASSWORD', env('DB_PASSWORD', '')),
             'unix_socket' => env('DB_SOCKET', ''),
             'charset' => 'utf8mb4',
             'collation' => 'utf8mb4_unicode_ci',
@@ -60,17 +53,7 @@ return [
             'options' => extension_loaded('pdo_mysql') ? array_filter([
                 PDO::MYSQL_ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
             ]) : [],
-        ], (function () {
-            $url = env('MYSQL_URL', env('DATABASE_URL'));
-            $parsed = $url ? parse_url($url) : [];
-            return [
-                'host' => $parsed['host'] ?? env('MYSQLHOST', env('DB_HOST', '127.0.0.1')),
-                'port' => $parsed['port'] ?? env('MYSQLPORT', env('DB_PORT', '3306')),
-                'database' => isset($parsed['path']) ? ltrim($parsed['path'], '/') : env('MYSQLDATABASE', env('DB_DATABASE', 'forge')),
-                'username' => $parsed['user'] ?? env('MYSQLUSER', env('DB_USERNAME', 'forge')),
-                'password' => $parsed['pass'] ?? env('MYSQLPASSWORD', env('DB_PASSWORD', '')),
-            ];
-        })()),
+        ],
 
         'pgsql' => [
             'driver' => 'pgsql',
