@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-// Catch-all route to serve the React SPA
+// Catch-all route to serve the React SPA, but ignore /api routes so they reach the backend!
 Route::get('/{any}', function () {
     return file_get_contents(public_path('index.html'));
-})->where('any', '.*');
+})->where('any', '^(?!api).*$');
