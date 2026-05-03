@@ -1,8 +1,9 @@
 [phases.setup]
-nixPkgs = ["nodejs_20", "npm-9_x"]
+nixPkgs = ["...", "nodejs"]
 
 [phases.build]
 cmds = [
+  "...",
   "cd frontend && npm install && npm run build",
   "cp -r frontend/dist/* public/"
 ]
