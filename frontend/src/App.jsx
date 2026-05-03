@@ -23,9 +23,11 @@ import './index.css';
 
 import FarmerOrders from './pages/Farmer/Orders';
 
-// In production (Railway), set VITE_API_URL to your backend Railway URL
-// In dev, leave it empty — Vite proxy handles /api/* → localhost:8000
-axios.defaults.baseURL = import.meta.env.VITE_API_URL || '';
+// In production, fallback directly to your chosen Railway backend URL to prevent 404s
+// In dev, use empty string so Vite proxy handles it to localhost:8000
+axios.defaults.baseURL = import.meta.env.DEV 
+  ? '' 
+  : (import.meta.env.VITE_API_URL || 'https://AgrichainButuan.up.railway.app');
 
 function App() {
   const [user, setUser] = React.useState(() => {
