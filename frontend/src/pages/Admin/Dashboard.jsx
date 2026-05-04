@@ -100,21 +100,6 @@ const AdminDashboard = ({ user }) => {
       <section style={{ marginBottom: '24px' }}>
         <h2 style={{ fontSize: '1.2rem', fontWeight: '800', marginBottom: '16px' }}>Verification Hub</h2>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          <div className="card"
-            style={{ display: 'flex', alignItems: 'center', gap: '16px', cursor: 'pointer', padding: '16px', borderLeft: `5px solid ${stats.pending_payments > 0 ? 'var(--warning)' : '#ddd'}` }}
-            onClick={() => navigate('/admin/verify')}
-          >
-            <div style={{ width: '56px', height: '56px', background: '#FFF9C4', borderRadius: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-              <ShieldCheck color="var(--warning)" size={28} />
-            </div>
-            <div style={{ flex: 1 }}>
-              <h3 style={{ fontSize: '1.05rem', fontWeight: '700' }}>Financial Verification</h3>
-              <p style={{ fontSize: '0.85rem', color: stats.pending_payments > 0 ? 'var(--warning)' : 'var(--text-muted)', fontWeight: stats.pending_payments > 0 ? '700' : '400' }}>
-                {stats.pending_payments} Pending Payment{stats.pending_payments !== 1 ? 's' : ''}
-              </p>
-            </div>
-            <ChevronRight size={20} color="#ccc" />
-          </div>
 
           <div className="card"
             style={{ display: 'flex', alignItems: 'center', gap: '16px', cursor: 'pointer', padding: '16px', borderLeft: `5px solid ${stats.pending_verifications > 0 ? 'var(--primary)' : '#ddd'}` }}
