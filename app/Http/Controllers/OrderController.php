@@ -76,12 +76,17 @@ class OrderController extends Controller
         $order = \App\Models\Order::findOrFail($id);
         
         $validated = $request->validate([
-            'status' => 'required|in:pending,approved,in_transit,delivered,cancelled'
+            'status' => 'sometimes|string',
+            'rider_name' => 'nullable|string',
+            'tracking_number' => 'nullable|string'
         ]);
+        
+        // Auto-approve if status is 'paid' (for this demo)
+        if (isset($validated['status']) && $validated['status'] === 'paid' && $order->status === 'pending') {
+            return $this->verifyPayment($id);
+        }
 
-        $order->update(['status' => $validated['status']]);
-
-        // Trigger notification logic here in a real app
+        $order->update($validated);
         
         return response()->json($order);
     }
