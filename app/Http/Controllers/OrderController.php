@@ -88,6 +88,38 @@ class OrderController extends Controller
 
         $order->update($validated);
         
+        // Trigger notifications for status changes
+        if (isset($validated['status'])) {
+            $statusMessages = [
+                'shipped' => "Your order ORD-{$order->id} is now IN TRANSIT! Assigned Rider: " . ($order->rider_name ?? 'Delivery Personnel'),
+                'delivered' => "Order ORD-{$order->id} has been DELIVERED. Thank you for choosing AgriChain!",
+                'cancelled' => "Order ORD-{$order->id} has been cancelled by the system administrator.",
+                'paid' => "Payment for ORD-{$order->id} has been verified. Fulfillment is now starting."
+            ];
+
+            if (isset($statusMessages[$validated['status']])) {
+                // Notify Retailer
+                \App\Models\Notification::create([
+                    'user_id' => $order->retailer_id,
+                    'title' => 'Order Update: ' . strtoupper($validated['status']),
+                    'message' => $statusMessages[$validated['status']],
+                    'type' => 'order'
+                ]);
+
+                // Notify Farmer(s)
+                $order->load('items.product');
+                $farmerIds = $order->items->pluck('product.farmer_id')->unique();
+                foreach ($farmerIds as $farmerId) {
+                    \App\Models\Notification::create([
+                        'user_id' => $farmerId,
+                        'title' => 'Order Update: ' . strtoupper($validated['status']),
+                        'message' => "Order ORD-{$order->id} status changed to " . strtoupper($validated['status']),
+                        'type' => 'order'
+                    ]);
+                }
+            }
+        }
+        
         return response()->json($order);
     }
 

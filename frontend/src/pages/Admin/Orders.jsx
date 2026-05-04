@@ -28,11 +28,12 @@ const AdminOrders = ({ user }) => {
     }
   };
 
-  const handleUpdate = async (id) => {
+  const handleUpdate = async (id, data) => {
     try {
-      await axios.put(`/api/orders/${id}`, editData);
+      await axios.put(`/api/orders/${id}`, data);
       showToast(`Order #${id} updated successfully`, 'success');
       setEditingId(null);
+      setEditData({ status: '', rider_name: '' }); // Reset
       fetchOrders();
     } catch (error) {
       showToast('Failed to update order', 'error');
@@ -103,36 +104,71 @@ const AdminOrders = ({ user }) => {
               </div>
 
               {editingId === order.id ? (
-                <div style={{ background: '#f0f7f0', padding: '12px', borderRadius: '12px', marginTop: '8px', animation: 'fadeIn 0.3s ease' }}>
-                  <p style={{ fontSize: '0.85rem', fontWeight: '700', marginBottom: '8px' }}>Manage Fulfillment</p>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                    <select 
-                      className="input" value={editData.status} 
-                      onChange={e => setEditData({...editData, status: e.target.value})}
-                      style={{ fontSize: '0.85rem' }}
-                    >
-                      <option value="pending">PENDING</option>
-                      <option value="paid">PAID / VERIFIED</option>
-                      <option value="shipped">SHIPPED / IN TRANSIT</option>
-                      <option value="delivered">DELIVERED</option>
-                      <option value="cancelled">CANCELLED</option>
-                    </select>
-                    <div style={{ position: 'relative' }}>
-                      <User size={14} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: '#888' }} />
-                      <input 
-                        type="text" placeholder="Assign Rider Name" className="input" 
-                        value={editData.rider_name} onChange={e => setEditData({...editData, rider_name: e.target.value})}
-                        style={{ fontSize: '0.85rem', paddingLeft: '32px' }}
-                      />
-                    </div>
-                    <div style={{ display: 'flex', gap: '8px' }}>
-                      <button onClick={() => setEditingId(null)} className="btn" style={{ flex: 1, fontSize: '0.8rem', background: '#eee' }}>Cancel</button>
-                      <button onClick={() => handleUpdate(order.id)} className="btn btn-primary" style={{ flex: 1, fontSize: '0.8rem' }}>Save Updates</button>
+                <div style={{ background: '#f0f7f0', padding: '16px', borderRadius: '12px', marginTop: '8px', animation: 'fadeIn 0.3s ease' }}>
+                  <p style={{ fontSize: '0.85rem', fontWeight: '800', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <Clipboard size={16} /> Fulfillment Actions
+                  </p>
+                  
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    {order.status === 'pending' && (
+                      <button 
+                        onClick={() => handleUpdate(order.id, { status: 'paid' })}
+                        className="btn btn-primary" style={{ width: '100%', padding: '12px', fontSize: '0.9rem' }}
+                      >
+                        ✅ Approve & Mark as Paid
+                      </button>
+                    )}
+
+                    {order.status === 'paid' && (
+                      <>
+                        <div style={{ position: 'relative' }}>
+                          <User size={14} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: '#888' }} />
+                          <input 
+                            type="text" placeholder="Type Rider Name..." className="input" 
+                            value={editData.rider_name} onChange={e => setEditData({...editData, rider_name: e.target.value})}
+                            style={{ fontSize: '0.85rem', paddingLeft: '32px' }}
+                          />
+                        </div>
+                        <button 
+                          onClick={() => {
+                            if (!editData.rider_name) { showToast('Please assign a rider first', 'warning'); return; }
+                            handleUpdate(order.id, { status: 'shipped', rider_name: editData.rider_name });
+                          }}
+                          className="btn btn-primary" style={{ width: '100%', padding: '12px', fontSize: '0.9rem', background: 'var(--accent)' }}
+                        >
+                          🚚 Assign Rider & Ship
+                        </button>
+                      </>
+                    )}
+
+                    {order.status === 'shipped' && (
+                      <button 
+                        onClick={() => handleUpdate(order.id, { status: 'delivered' })}
+                        className="btn btn-primary" style={{ width: '100%', padding: '12px', fontSize: '0.9rem', background: 'var(--primary)' }}
+                      >
+                        📦 Confirm Delivery
+                      </button>
+                    )}
+
+                    <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
+                      <button onClick={() => setEditingId(null)} className="btn" style={{ flex: 1, fontSize: '0.8rem', background: '#eee' }}>Back</button>
+                      {order.status !== 'delivered' && order.status !== 'cancelled' && (
+                        <button 
+                          onClick={() => handleUpdate(order.id, { status: 'cancelled' })}
+                          className="btn" style={{ flex: 1, fontSize: '0.8rem', background: '#ffebee', color: 'var(--danger)', border: '1px solid #ffcdd2' }}
+                        >
+                          Cancel Order
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>
               ) : (
                 <div style={{ background: '#f9f9f9', padding: '10px', borderRadius: '8px', fontSize: '0.85rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', paddingBottom: '8px', borderBottom: '1px solid #eee' }}>
+                    <span style={{ color: 'var(--text-muted)' }}>From: <span style={{ color: 'var(--text-main)', fontWeight: '600' }}>{order.items?.[0]?.product?.farmer?.name || 'Farmer'}</span></span>
+                    <span style={{ color: 'var(--text-muted)' }}>To: <span style={{ color: 'var(--text-main)', fontWeight: '600' }}>{order.retailer?.name || 'Retailer'}</span></span>
+                  </div>
                   {order.items?.map(item => (
                     <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
                       <span>{item.quantity} {item.product.unit} {item.product.name}</span>
@@ -140,8 +176,8 @@ const AdminOrders = ({ user }) => {
                     </div>
                   ))}
                   {order.rider_name && (
-                    <div style={{ marginTop: '8px', paddingTop: '8px', borderTop: '1px solid #eee', display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--primary)', fontWeight: '600' }}>
-                      <User size={14} /> Rider: {order.rider_name}
+                    <div style={{ marginTop: '8px', paddingTop: '8px', borderTop: '1px solid #eee', display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--primary)', fontWeight: '700' }}>
+                      <Truck size={14} /> Rider: {order.rider_name}
                     </div>
                   )}
                 </div>
