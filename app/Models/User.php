@@ -18,7 +18,8 @@ class User extends Authenticatable
      */
     protected $fillable = [
         'name', 'email', 'password', 'role', 'phone', 'location', 'avatar', 'status', 'verification_id',
-        'barangay', 'permit_image', 'farmer_id_image', 'profile_picture', 'gcash_number', 'gcash_qr', 'default_delivery_address'
+        'barangay', 'permit_image', 'permit_path', 'farmer_id_image', 'profile_picture', 'gcash_number', 'gcash_qr', 
+        'default_delivery_address', 'vehicle_details', 'license_number'
     ];
 
     /**

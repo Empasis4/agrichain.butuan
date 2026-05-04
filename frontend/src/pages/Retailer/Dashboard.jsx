@@ -6,21 +6,16 @@ import axios from 'axios';
 const RetailerDashboard = ({ user }) => {
   const navigate = useNavigate();
 
-  const [isExpanded, setIsExpanded] = React.useState(true);
   const [stats, setStats] = React.useState({ active_orders: 0 });
   const [trending, setTrending] = React.useState([]);
   const [recent, setRecent] = React.useState([]);
+  const [notifications, setNotifications] = React.useState([]);
 
   React.useEffect(() => {
     if (!user?.id) return;
     fetchData();
     const pollInterval = setInterval(fetchData, 10000);
-    const handleScroll = () => {
-      setIsExpanded(window.scrollY <= 50);
-    };
-    window.addEventListener('scroll', handleScroll);
     return () => {
-      window.removeEventListener('scroll', handleScroll);
       clearInterval(pollInterval);
     };
   }, [user?.id]);
@@ -44,6 +39,10 @@ const RetailerDashboard = ({ user }) => {
       // Fetch Trending Products
       const productRes = await axios.get('/api/products');
       setTrending(Array.isArray(productRes.data) ? productRes.data.slice(0, 5) : []);
+
+      // Fetch Notifications for Badge
+      const notifRes = await axios.get(`/api/notifications?user_id=${user.id}&limit=20`);
+      setNotifications(Array.isArray(notifRes.data) ? notifRes.data : []);
     } catch (err) {
       console.error('Retailer data fetch error:', err);
     }
@@ -58,9 +57,14 @@ const RetailerDashboard = ({ user }) => {
         </div>
         <div 
           onClick={() => navigate('/notifications')}
-          style={{ width: '40px', height: '40px', background: '#fff', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: 'var(--shadow-sm)', cursor: 'pointer' }}
+          style={{ width: '40px', height: '40px', background: '#fff', borderRadius: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: 'var(--shadow-sm)', cursor: 'pointer', position: 'relative', border: '1px solid #f0f0f0' }}
         >
           <Bell size={20} color="var(--primary)" />
+          {notifications.filter(n => !n.is_read).length > 0 && (
+            <span style={{ position: 'absolute', top: '-6px', right: '-6px', background: 'var(--danger)', color: '#fff', borderRadius: '50%', width: '18px', height: '18px', fontSize: '0.65rem', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '900', border: '2px solid #fff', boxShadow: '0 2px 4px rgba(244, 67, 54, 0.3)' }}>
+              {notifications.filter(n => !n.is_read).length}
+            </span>
+          )}
         </div>
       </header>
 
@@ -187,23 +191,6 @@ const RetailerDashboard = ({ user }) => {
       </section>
 
       {/* Smart FAB - Shrinks on scroll */}
-      <button 
-        className="fab" 
-        onClick={() => navigate('/marketplace')}
-        style={{ 
-          width: isExpanded ? 'calc(100% - 40px)' : '56px',
-          borderRadius: isExpanded ? '16px' : '50%',
-          transition: 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
-          overflow: 'hidden',
-          whiteSpace: 'nowrap',
-          padding: isExpanded ? '14px 20px' : '0',
-          justifyContent: isExpanded ? 'center' : 'center'
-        }}
-      >
-        <ShoppingCart size={24} />
-        {isExpanded && <span style={{ marginLeft: '12px' }}>Open Marketplace</span>}
-      </button>
-
       <div style={{ height: '40px' }}></div>
     </div>
   );

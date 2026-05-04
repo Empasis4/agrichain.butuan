@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { Home, ShoppingBag, ClipboardList, Bell, User, Settings } from 'lucide-react';
+import { Home, ShoppingBag, ClipboardList, Bell, User, Settings, MessageSquare } from 'lucide-react';
 
 const Navigation = ({ role }) => {
   return (
@@ -19,12 +19,17 @@ const Navigation = ({ role }) => {
 
       <NavLink to="/orders" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
         <ClipboardList size={24} />
-        <span>Orders</span>
+        <span>{role === 'rider' ? 'History' : role === 'farmer' ? 'Deliveries' : 'Orders'}</span>
       </NavLink>
 
       <NavLink to="/notifications" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
         <Bell size={24} />
         <span>Alerts</span>
+      </NavLink>
+
+      <NavLink to="/chat-inbox" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+        <MessageSquare size={24} />
+        <span>Messages</span>
       </NavLink>
 
       <NavLink to="/profile" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>

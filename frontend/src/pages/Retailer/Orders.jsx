@@ -25,7 +25,9 @@ const RetailerOrders = ({ user }) => {
         total: parseFloat(o.total_price),
         status: o.status,
         items: o.items?.length || 0,
-        farmer: o.items?.[0]?.product?.farmer?.name || 'Local Farmer'
+        farmer: o.items?.[0]?.product?.farmer?.name || 'Local Farmer',
+        farmerId: o.items?.[0]?.product?.farmer_id,
+        riderId: o.rider_id
       })));
       setLoading(false);
     } catch (error) {
@@ -74,16 +76,33 @@ const RetailerOrders = ({ user }) => {
                 </div>
               </div>
 
-              <div style={{ display: 'flex', gap: '8px', borderTop: '1px solid #eee', paddingTop: '12px' }}>
+              <div style={{ display: 'flex', gap: '8px', borderTop: '1px solid #eee', paddingTop: '12px', marginBottom: '8px' }}>
                 <button 
-                  onClick={() => navigate(`/orders/${order.id}`)}
+                  onClick={() => navigate(`/chat/${order.farmerId}`)}
+                  style={{ flex: 1, padding: '6px', fontSize: '0.7rem', background: 'var(--primary-light)', color: 'var(--primary)', border: 'none', borderRadius: '6px', fontWeight: '700', cursor: 'pointer' }}
+                >
+                  Chat with Farmer
+                </button>
+                {order.riderId && (
+                  <button 
+                    onClick={() => navigate(`/chat/${order.riderId}`)}
+                    style={{ flex: 1, padding: '6px', fontSize: '0.7rem', background: '#f0f7ff', color: '#007bff', border: 'none', borderRadius: '6px', fontWeight: '700', cursor: 'pointer' }}
+                  >
+                    Chat with Rider
+                  </button>
+                )}
+              </div>
+
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <button 
+                  onClick={() => navigate(`/orders/${order.rawId}`)}
                   className="btn" style={{ flex: 1, padding: '8px', fontSize: '0.8rem', background: '#fff', border: '1px solid #ddd' }}
                 >
                   View Details
                 </button>
-                {order.status === 'pending' && (
+                {(order.status === 'pending' || order.status === 'shipped') && (
                   <button 
-                    onClick={() => navigate(`/orders/${order.id}/track`)}
+                    onClick={() => navigate(`/orders/${order.rawId}/track`)}
                     className="btn btn-primary" style={{ flex: 1, padding: '8px', fontSize: '0.8rem' }}
                   >
                     Track Order

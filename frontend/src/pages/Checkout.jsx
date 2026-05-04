@@ -4,6 +4,33 @@ import { CreditCard, Truck, ChevronLeft, CheckCircle, Minus, Plus, ShoppingBag, 
 import { useToast } from '../components/Toast';
 import axios from 'axios';
 
+// Coordinates for Butuan Barangays (Mock for simulation)
+const barangayCoords = {
+  'antongalon': [8.9322, 125.6025],
+  'ampayon': [8.9500, 125.6000],
+  'san vicente': [8.9400, 125.5000],
+  'maguinda': [8.9000, 125.6000],
+  'libertad': [8.9419, 125.5222],
+  'ambago': [8.9556, 125.5111],
+  'villakananga': [8.9278, 125.5389],
+  'bayanihan': [8.9486, 125.5361],
+  'holy redeemer': [8.9583, 125.5333],
+  'leon kilat': [8.9472, 125.5417],
+  'san ignacio': [8.9444, 125.5472],
+  'doongan': [8.9500, 125.5500],
+  'baan': [8.9600, 125.5600],
+  'obrero': [8.9528, 125.5417],
+  'default': [8.9475, 125.5406]
+};
+
+const getCoords = (name) => {
+  const searchStr = (name || '').toLowerCase();
+  for (let k in barangayCoords) {
+      if (searchStr.includes(k)) return barangayCoords[k];
+  }
+  return barangayCoords['default'];
+};
+
 const Checkout = ({ user: userProp }) => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -16,31 +43,16 @@ const Checkout = ({ user: userProp }) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [quantity, setQuantity] = useState(initialQty || 1);
   const [deliveryAddress, setDeliveryAddress] = useState(user?.default_delivery_address || user?.barangay || 'Butuan City');
+  const [retailerPos, setRetailerPos] = useState(() => getCoords(user?.default_delivery_address || user?.barangay || 'Butuan City'));
   const [paymentReference, setPaymentReference] = useState('');
   const [paymentProof, setPaymentProof] = useState('');
 
-  // Coordinates for Butuan Barangays (Mock for simulation)
-  const barangayCoords = {
-    'libertad': [8.9419, 125.5222],
-    'ambago': [8.9556, 125.5111],
-    'villakananga': [8.9278, 125.5389],
-    'bayanihan': [8.9486, 125.5361],
-    'holy redeemer': [8.9583, 125.5333],
-    'leon kilat': [8.9472, 125.5417],
-    'san ignacio': [8.9444, 125.5472],
-    'default': [8.9475, 125.5406]
-  };
-
-  const getCoords = (name) => {
-    const key = (name || '').toLowerCase().replace(/\s/g, '');
-    for (let k in barangayCoords) {
-        if (key.includes(k)) return barangayCoords[k];
-    }
-    return barangayCoords['default'];
-  };
-
   const farmerPos = getCoords(product.barangay || product.location);
-  const retailerPos = getCoords(deliveryAddress);
+  
+  const handleAddressSubmit = () => {
+    const newPos = getCoords(deliveryAddress);
+    setRetailerPos(newPos);
+  };
 
   // Automated Shipping Fee Calculation
   // Base ₱100 + ₱20 per km (simulated) + ₱5 per quantity
@@ -60,27 +72,70 @@ const Checkout = ({ user: userProp }) => {
 
     // Initialize Leaflet Map
     if (window.L && !mapInstance.current) {
-        mapInstance.current = window.L.map('checkout-map').setView([8.9475, 125.5406], 13);
-        window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© OpenStreetMap'
+        mapInstance.current = window.L.map('checkout-map', { zoomControl: false }).setView([8.9475, 125.5406], 13);
+        window.L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+            attribution: '© OpenStreetMap © CARTO'
         }).addTo(mapInstance.current);
+
+        // Custom Icon for modern look
+        const createIcon = (color) => window.L.divIcon({
+            className: 'custom-map-marker',
+            html: `<div style="background: ${color}; width: 12px; height: 12px; border: 3px solid #fff; border-radius: 50%; box-shadow: 0 0 10px ${color}88;"></div>`,
+            iconSize: [18, 18],
+            iconAnchor: [9, 9]
+        });
 
         // Dynamic Markers
-        const farmerMarker = window.L.marker(farmerPos).addTo(mapInstance.current)
+        const farmerMarker = window.L.marker(farmerPos, { icon: createIcon('var(--primary)') }).addTo(mapInstance.current)
             .bindPopup(`<b>Pick-up:</b> ${product.farmer?.name || 'Farmer'} (${product.barangay || 'Farm Area'})`).openPopup();
         
-        const retailerMarker = window.L.marker(retailerPos).addTo(mapInstance.current)
+        const retailerMarker = window.L.marker(retailerPos, { icon: createIcon('#007DFE') }).addTo(mapInstance.current)
             .bindPopup(`<b>Drop-off:</b> ${user.name || 'You'} (${deliveryAddress})`);
 
-        // Live Route Path
+        // Live Route Path with Animation
         const latlngs = [farmerPos, retailerPos];
-        window.L.polyline(latlngs, {
+        const route = window.L.polyline(latlngs, {
             color: 'var(--primary)', 
-            weight: 5, 
-            opacity: 0.7,
-            dashArray: '10, 15',
-            lineJoin: 'round'
+            weight: 4, 
+            opacity: 0.8,
+            dashArray: '10, 10',
+            lineJoin: 'round',
+            className: 'map-route-flow' // CSS animation target
         }).addTo(mapInstance.current);
+
+        // --- INTERACTIVE LIVE MAP FEATURES ---
+        mapInstance.current.on('click', (e) => {
+            const { lat, lng } = e.latlng;
+            updateDropoff(lat, lng);
+        });
+
+        const updateDropoff = (lat, lng) => {
+            retailerMarker.setLatLng([lat, lng])
+                .setPopupContent(`<b>New Drop-off:</b> Custom Pinned Location`)
+                .openPopup();
+            
+            route.setLatLngs([farmerPos, [lat, lng]]);
+            setDeliveryAddress(`Pinned Location: ${lat.toFixed(5)}, ${lng.toFixed(5)}`);
+            
+            const newBounds = window.L.latLngBounds([farmerPos, [lat, lng]]);
+            mapInstance.current.fitBounds(newBounds, { padding: [50, 50] });
+        };
+
+        // Make marker draggable for precision
+        retailerMarker.options.draggable = true;
+        retailerMarker.on('dragend', (e) => {
+            const { lat, lng } = e.target.getLatLng();
+            updateDropoff(lat, lng);
+        });
+
+        // Add a global function for the "Locate Me" button to call
+        window.agrichain_locate_user = () => {
+            if (!navigator.geolocation) return alert('Geolocation not supported');
+            navigator.geolocation.getCurrentPosition((pos) => {
+                const { latitude, longitude } = pos.coords;
+                updateDropoff(latitude, longitude);
+            });
+        };
 
         // Fit map to bounds
         const bounds = window.L.latLngBounds(latlngs);
@@ -93,7 +148,7 @@ const Checkout = ({ user: userProp }) => {
             mapInstance.current = null;
         }
     };
-  }, [product, deliveryAddress]);
+  }, [product, retailerPos]);
 
   if (!product) {
     return (
@@ -129,6 +184,18 @@ const Checkout = ({ user: userProp }) => {
 
     setIsProcessing(true);
     try {
+      // AUTO-ASSIGN RIDER LOGIC
+      let assignedRider = null;
+      try {
+          const ridersRes = await axios.get('/api/admin/users?role=rider');
+          const availableRiders = Array.isArray(ridersRes.data) ? ridersRes.data : [];
+          if (availableRiders.length > 0) {
+              assignedRider = availableRiders[Math.floor(Math.random() * availableRiders.length)];
+          }
+      } catch (e) {
+          console.error('Rider fetch error:', e);
+      }
+
       const orderData = {
         retailer_id: user.id,
         total_price: total,
@@ -137,6 +204,8 @@ const Checkout = ({ user: userProp }) => {
         shipping_fee: shippingFee,
         payment_reference: paymentReference,
         payment_proof_image: paymentProof,
+        rider_id: assignedRider?.id || null,
+        rider_name: assignedRider?.name || 'AgriChain Logistics Partner',
         items: [{ product_id: product.id, quantity, price_at_time: pricePerUnit }]
       };
 
@@ -165,6 +234,16 @@ const Checkout = ({ user: userProp }) => {
             user_id: product.farmer_id,
             title: '💳 Payment Uploaded',
             message: `Retailer uploaded payment proof for Order #${orderId}. Please check for preparation.`,
+            type: 'order'
+          });
+      }
+
+      // Notify Rider
+      if (assignedRider?.id) {
+          await axios.post('/api/notifications', {
+            user_id: assignedRider.id,
+            title: '🚛 New Delivery Job Assigned!',
+            message: `You have a new client: ${user.name || 'Retailer'}. Pickup harvest from: ${product.farmer?.name || 'Farmer'}.`,
             type: 'order'
           });
       }
@@ -243,17 +322,58 @@ const Checkout = ({ user: userProp }) => {
         </div>
       </section>
 
-      {/* Delivery Address & Map */}
-      <section className="card" style={{ marginBottom: '16px' }}>
-        <h2 style={{ fontSize: '1rem', marginBottom: '8px', fontWeight: '700' }}>Delivery Address</h2>
-        <input
-          type="text"
-          value={deliveryAddress}
-          onChange={e => setDeliveryAddress(e.target.value)}
-          placeholder="Enter detailed delivery address..."
-          style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid #ddd', fontSize: '0.9rem', outline: 'none', marginBottom: '12px' }}
-        />
-        <div id="checkout-map" style={{ width: '100%', height: '200px', borderRadius: '12px', border: '1px solid #ddd', zIndex: 0 }}></div>
+      {/* Delivery Address & Map Section (Precision Design) */}
+      <section className="card" style={{ marginBottom: '24px', padding: '24px', border: '1px solid #f0f0f0' }}>
+        <div style={{ position: 'relative', marginBottom: '20px' }}>
+            <MapPin size={20} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: '#999' }} />
+            <input
+                type="text"
+                value={deliveryAddress}
+                onChange={e => setDeliveryAddress(e.target.value)}
+                onKeyDown={e => {
+                    if (e.key === 'Enter') {
+                        handleAddressSubmit();
+                        showToast('Location updated from text', 'success');
+                    }
+                }}
+                onBlur={handleAddressSubmit}
+                placeholder="Enter full address manually... [Press Enter to Pin]"
+                style={{ 
+                    width: '100%', 
+                    padding: '16px 16px 16px 48px', 
+                    borderRadius: '16px', 
+                    border: '1px solid #eee', 
+                    fontSize: '1rem', 
+                    fontWeight: '600',
+                    outline: 'none', 
+                    background: '#fcfcfc',
+                    boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.02)'
+                }}
+            />
+        </div>
+
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+            <h2 style={{ fontSize: '0.75rem', fontWeight: '900', color: '#999', letterSpacing: '1px', textTransform: 'uppercase' }}>Pin Your Exact Location</h2>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span style={{ width: '8px', height: '8px', background: '#FF9800', borderRadius: '50%', boxShadow: '0 0 8px #FF9800' }}></span>
+                <span style={{ fontSize: '0.7rem', fontWeight: '800', color: '#8d6e63', letterSpacing: '0.5px' }}>PRECISION ROUTING ACTIVE</span>
+            </div>
+        </div>
+
+        <div style={{ position: 'relative' }}>
+            <div id="checkout-map" style={{ width: '100%', height: '280px', borderRadius: '24px', border: '1px solid #eee', zIndex: 0, overflow: 'hidden' }}></div>
+            
+            {/* Floating GPS Badge */}
+            <div style={{ 
+                position: 'absolute', bottom: '16px', left: '16px', zIndex: 1000,
+                background: 'rgba(255,255,255,0.95)', padding: '8px 16px', borderRadius: '12px',
+                display: 'flex', alignItems: 'center', gap: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                backdropFilter: 'blur(4px)'
+            }}>
+                <span style={{ width: '8px', height: '8px', background: '#4CAF50', borderRadius: '50%', boxShadow: '0 0 8px #4CAF50' }}></span>
+                <span style={{ fontSize: '0.75rem', fontWeight: '800', color: 'var(--text-main)', letterSpacing: '0.5px' }}>GPS ACTIVE</span>
+            </div>
+        </div>
       </section>
 
       {/* Payment Method */}
@@ -280,43 +400,75 @@ const Checkout = ({ user: userProp }) => {
               </div>
               
               {paymentMethod === 'gcash' && pm.id === 'gcash' && (
-                  <div style={{ width: '100%', marginTop: '12px', paddingTop: '12px', borderTop: '1px dashed #ddd', textAlign: 'left' }} onClick={e => e.stopPropagation()}>
-                      <p style={{ fontSize: '0.85rem', marginBottom: '8px', fontWeight: '600' }}>Send GCash to: {product.farmer?.gcash_number || '09123456789'}</p>
+                  <div style={{ width: '100%', marginTop: '16px', paddingTop: '20px', borderTop: '1px solid #f0f0f0', textAlign: 'left' }} onClick={e => e.stopPropagation()}>
+                      <div style={{ background: '#f8fbff', padding: '16px', borderRadius: '12px', border: '1px solid #e1efff', marginBottom: '16px' }}>
+                          <p style={{ fontSize: '0.85rem', marginBottom: '4px', color: '#666', fontWeight: '600' }}>Recipient Details</p>
+                          <p style={{ fontSize: '1.1rem', fontWeight: '800', color: '#007DFE' }}>{product.farmer?.gcash_number || '091030910931'}</p>
+                          <p style={{ fontSize: '0.75rem', color: '#999', marginTop: '2px' }}>Name: {product.farmer?.name || 'AgriChain Farmer'}</p>
+                      </div>
+
                       {product.farmer?.gcash_qr && (
-                          <div style={{ marginBottom: '12px' }}>
-                              <img src={product.farmer.gcash_qr} alt="GCash QR" style={{ width: '100px', borderRadius: '8px' }} />
+                          <div style={{ textAlign: 'center', marginBottom: '20px', padding: '16px', background: '#fff', borderRadius: '16px', border: '1px dashed #ddd' }}>
+                              <img src={product.farmer.gcash_qr} alt="GCash QR" style={{ width: '140px', borderRadius: '12px', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }} />
+                              <p style={{ fontSize: '0.7rem', color: '#999', marginTop: '8px', fontWeight: '600' }}>SCAN OR SAVE TO GALLERY</p>
                           </div>
                       )}
-                      <a href="https://m.gcash.com" target="_blank" rel="noreferrer" className="btn btn-primary" style={{ display: 'inline-block', marginBottom: '12px', padding: '8px 16px', fontSize: '0.8rem', background: '#007DFE', textDecoration: 'none' }}>
+
+                      <a 
+                        href="gcash://app" 
+                        onClick={(e) => {
+                            // Fallback logic for desktop/web
+                            setTimeout(() => {
+                                window.location.href = "https://www.gcash.com";
+                            }, 500);
+                        }}
+                        className="btn" 
+                        style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '16px', padding: '14px', fontSize: '0.95rem', fontWeight: '800', background: '#007DFE', color: '#fff', borderRadius: '14px', textDecoration: 'none', boxShadow: '0 4px 14px rgba(0, 125, 254, 0.3)' }}
+                      >
                           Open GCash App
                       </a>
-                      <input type="text" placeholder="Reference Number (Optional)" value={paymentReference} onChange={e => setPaymentReference(e.target.value)} style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #ddd', marginBottom: '8px', fontSize: '0.85rem' }} />
-                      
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                          <label style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Upload Proof of Payment</label>
-                          <div 
-                            onClick={() => document.getElementById('payment-proof-upload').click()}
-                            style={{ width: '100%', height: '80px', border: '2px dashed #ddd', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', background: '#fcfcfc', overflow: 'hidden' }}
-                          >
-                            {paymentProof ? (
-                                <img src={paymentProof} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                            ) : (
-                                <span style={{ fontSize: '0.8rem', color: '#999' }}>Click to Upload Screenshot</span>
-                            )}
+
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                          <div>
+                            <label style={{ fontSize: '0.75rem', color: '#666', fontWeight: '700', marginBottom: '6px', display: 'block' }}>Reference Number</label>
+                            <input 
+                                type="text" 
+                                placeholder="Enter 13-digit reference number" 
+                                value={paymentReference} 
+                                onChange={e => setPaymentReference(e.target.value)} 
+                                style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '1px solid #ddd', fontSize: '0.9rem', fontWeight: '600', outline: 'none', background: '#fcfcfc' }} 
+                            />
                           </div>
-                          <input 
-                            id="payment-proof-upload" type="file" accept="image/*" hidden 
-                            onChange={(e) => {
-                                const file = e.target.files[0];
-                                if (file) {
-                                    const reader = new FileReader();
-                                    reader.onloadend = () => setPaymentProof(reader.result);
-                                    reader.readAsDataURL(file);
-                                }
-                            }}
-                          />
+                          
+                          <div>
+                              <label style={{ fontSize: '0.75rem', color: '#666', fontWeight: '700', marginBottom: '6px', display: 'block' }}>Upload Proof of Payment</label>
+                              <div 
+                                onClick={() => document.getElementById('payment-proof-upload').click()}
+                                style={{ width: '100%', minHeight: '100px', border: '2px dashed #e0e0e0', borderRadius: '16px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', background: '#fafafa', overflow: 'hidden', transition: 'all 0.2s' }}
+                              >
+                                {paymentProof ? (
+                                    <img src={paymentProof} style={{ width: '100%', maxHeight: '200px', objectFit: 'contain' }} />
+                                ) : (
+                                    <>
+                                        <ShoppingBag size={24} color="#aaa" style={{ marginBottom: '8px' }} />
+                                        <span style={{ fontSize: '0.8rem', color: '#999', fontWeight: '600' }}>Click to Upload Screenshot</span>
+                                    </>
+                                )}
+                              </div>
+                              <input 
+                                id="payment-proof-upload" type="file" accept="image/*" hidden 
+                                onChange={(e) => {
+                                    const file = e.target.files[0];
+                                    if (file) {
+                                        const reader = new FileReader();
+                                        reader.onloadend = () => setPaymentProof(reader.result);
+                                        reader.readAsDataURL(file);
+                                    }
+                                }}
+                              />
+                          </div>
                       </div>
-                      <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '4px' }}>* Manual verification by Admin required</p>
+                      <p style={{ fontSize: '0.7rem', color: '#999', marginTop: '16px', textAlign: 'center', fontStyle: 'italic' }}>* Our Admin will verify your payment within 15-30 minutes.</p>
                   </div>
               )}
             </div>

@@ -106,7 +106,24 @@ body {
   font-family: inherit;
   font-size: 1rem;
   transition: all 0.2s;
-  box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+/* Modern Map Animations */
+.map-route-flow {
+  stroke-dasharray: 10, 10;
+  animation: flow 20s linear infinite;
+}
+
+@keyframes flow {
+  from { stroke-dashoffset: 200; }
+  to { stroke-dashoffset: 0; }
+}
+
+.custom-map-marker {
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .input:focus {
@@ -265,3 +282,28 @@ body {
   to { transform: scale(1) translateY(0); opacity: 1; }
 }
 
+
+/* Custom Scrollbar for horizontal lists */
+.custom-scrollbar {
+  overflow-x: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--primary) transparent;
+  padding-bottom: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  height: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #eee;
+  border-radius: 10px;
+}
+
+.custom-scrollbar:hover::-webkit-scrollbar-thumb {
+  background: #ddd;
+}

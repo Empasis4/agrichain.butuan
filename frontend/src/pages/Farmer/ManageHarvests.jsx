@@ -134,12 +134,33 @@ const ManageHarvests = ({ user }) => {
                 <label style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: '600', paddingLeft: '4px' }}>Crop Category</label>
                 <select 
                     className="input" required
-                    value={newProduct.category} onChange={e => setNewProduct({...newProduct, category: e.target.value})}
+                    value={['Vegetables', 'Fruits', 'Root Crops'].includes(newProduct.category) ? newProduct.category : 'Other'} 
+                    onChange={e => {
+                        const val = e.target.value;
+                        if(val === 'Other') {
+                            setNewProduct({...newProduct, category: ''});
+                        } else {
+                            setNewProduct({...newProduct, category: val});
+                        }
+                    }}
                 >
                     <option value="Vegetables">Vegetables</option>
                     <option value="Fruits">Fruits</option>
                     <option value="Root Crops">Root Crops</option>
+                    <option value="Other">Other (Specify)</option>
                 </select>
+                
+                {!['Vegetables', 'Fruits', 'Root Crops'].includes(newProduct.category) && (
+                    <input 
+                        type="text" 
+                        placeholder="Enter custom category (e.g. Spices, Grains)" 
+                        className="input" 
+                        required
+                        style={{ marginTop: '4px', background: '#fff8f0', borderColor: '#ffe0b2' }}
+                        value={newProduct.category} 
+                        onChange={e => setNewProduct({...newProduct, category: e.target.value})}
+                    />
+                )}
             </div>
 
             <div style={{ display: 'flex', gap: '8px' }}>

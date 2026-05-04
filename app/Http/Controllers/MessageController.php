@@ -27,4 +27,34 @@ class MessageController extends Controller
         $message = Message::create($validated);
         return response()->json($message, 201);
     }
+
+    public function inbox($userId)
+    {
+        $userId = (int)$userId;
+        $messages = Message::where('sender_id', $userId)
+            ->orWhere('receiver_id', $userId)
+            ->with(['sender', 'receiver'])
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        $inbox = [];
+        foreach ($messages as $msg) {
+            $otherUser = $msg->sender_id == $userId ? $msg->receiver : $msg->sender;
+            
+            if (!$otherUser) continue;
+            
+            $otherUserId = $otherUser->id;
+            if (!isset($inbox[$otherUserId])) {
+                $inbox[$otherUserId] = [
+                    'id' => $otherUserId,
+                    'name' => $otherUser->name,
+                    'role' => $otherUser->role,
+                    'last_message' => $msg->message,
+                    'last_message_time' => $msg->created_at,
+                ];
+            }
+        }
+
+        return response()->json(array_values($inbox));
+    }
 }

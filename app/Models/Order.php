@@ -23,4 +23,9 @@ class Order extends Model
     {
         return $this->hasMany(OrderItem::class);
     }
+
+    public function rider()
+    {
+        return $this->belongsTo(User::class, 'rider_id');
+    }
 }

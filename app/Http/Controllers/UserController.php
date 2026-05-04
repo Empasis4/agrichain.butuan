@@ -13,6 +13,18 @@ class UserController extends Controller
         return User::where('status', 'pending')->get();
     }
 
+    // Admin: List all users
+    public function index(Request $request)
+    {
+        $query = User::orderBy('created_at', 'desc');
+        
+        if ($request->has('role')) {
+            $query->where('role', $request->role);
+        }
+
+        return $query->get();
+    }
+
     // Admin: Verify user
     public function verifyUser($id, Request $request)
     {
@@ -82,5 +94,42 @@ class UserController extends Controller
         ]);
 
         return response()->json(['message' => 'Rider account created successfully', 'user' => $user], 201);
+    }
+
+    public function broadcastAnnouncement(Request $request)
+    {
+        $validated = $request->validate([
+            'title' => 'required|string',
+            'message' => 'required|string',
+            'role' => 'required|string' // all, farmer, retailer, rider
+        ]);
+
+        $query = User::query();
+        if ($validated['role'] !== 'all') {
+            $query->where('role', $validated['role']);
+        }
+
+        $users = $query->get();
+
+        foreach ($users as $user) {
+            \App\Models\Notification::create([
+                'user_id' => $user->id,
+                'title' => '📢 ' . $validated['title'],
+                'message' => $validated['message'],
+                'type' => 'system'
+            ]);
+        }
+
+        return response()->json(['message' => 'Announcement broadcasted to ' . $users->count() . ' users.']);
+    }
+
+    public function show($id)
+    {
+        $user = User::findOrFail($id);
+        return response()->json([
+            'id' => $user->id,
+            'name' => $user->name,
+            'role' => $user->role
+        ]);
     }
 }

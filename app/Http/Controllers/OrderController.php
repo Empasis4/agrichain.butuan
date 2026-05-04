@@ -13,7 +13,7 @@ class OrderController extends Controller
      */
     public function index(Request $request)
     {
-        $query = \App\Models\Order::with(['retailer', 'items.product']);
+        $query = \App\Models\Order::with(['retailer', 'rider', 'items.product']);
         
         if ($request->has('status')) {
             $query->where('status', $request->status);
@@ -37,6 +37,8 @@ class OrderController extends Controller
             'payment_proof_image' => 'nullable|string',
             'payment_reference' => 'nullable|string',
             'map_coordinates' => 'nullable|string',
+            'rider_id' => 'nullable|exists:users,id',
+            'rider_name' => 'nullable|string',
         ]);
 
         $order = \App\Models\Order::create([
@@ -49,6 +51,8 @@ class OrderController extends Controller
             'payment_proof_image' => $validated['payment_proof_image'] ?? null,
             'payment_reference' => $validated['payment_reference'] ?? null,
             'map_coordinates' => $validated['map_coordinates'] ?? null,
+            'rider_id' => $validated['rider_id'] ?? null,
+            'rider_name' => $validated['rider_name'] ?? null,
         ]);
 
         foreach ($validated['items'] as $item) {
@@ -173,11 +177,25 @@ class OrderController extends Controller
     {
         return \App\Models\Order::whereHas('items.product', function($query) use ($farmer_id) {
             $query->where('farmer_id', $farmer_id);
-        })->with(['retailer', 'items.product'])->latest()->get();
+        })->with(['retailer', 'rider', 'items.product'])->latest()->get();
     }
 
     public function getRetailerOrders($retailer_id)
     {
-        return \App\Models\Order::where('retailer_id', $retailer_id)->with(['items.product'])->latest()->get();
+        return \App\Models\Order::where('retailer_id', $retailer_id)->with(['rider', 'items.product.farmer'])->latest()->get();
+    }
+
+    public function getRiderOrders($rider_id)
+    {
+        // Return orders explicitly assigned to this rider (at any stage)
+        // OR available for pickup (approved/paid and unassigned)
+        return \App\Models\Order::where('rider_id', $rider_id)
+            ->orWhere(function($query) {
+                $query->whereNull('rider_id')
+                      ->whereIn('status', ['approved', 'paid']);
+            })
+            ->with(['retailer', 'rider', 'items.product.farmer'])
+            ->latest()
+            ->get();
     }
 }

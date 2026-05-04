@@ -26,10 +26,11 @@ const Chat = ({ user }) => {
 
   const fetchOtherUser = async () => {
     try {
-      const res = await axios.get(`/api/user`); // This might need a specific user endpoint
-      // For demo purposes, we'll assume we can get user info
-      // Or we can just use the otherUserId
-    } catch (err) {}
+      const res = await axios.get(`/api/users/${otherUserId}`);
+      setOtherUser(res.data);
+    } catch (err) {
+      console.error('Fetch other user error:', err);
+    }
   };
 
   const fetchMessages = async () => {
@@ -62,10 +63,13 @@ const Chat = ({ user }) => {
     <div className="chat-page" style={{ display: 'flex', flexDirection: 'column', height: '100vh', padding: '0' }}>
       <header style={{ padding: '16px', background: '#fff', borderBottom: '1px solid #eee', display: 'flex', alignItems: 'center', gap: '12px' }}>
         <ArrowLeft onClick={() => navigate(-1)} style={{ cursor: 'pointer' }} />
-        <div style={{ width: '32px', height: '32px', background: 'var(--primary)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}>
-          <User size={18} />
+        <div style={{ width: '36px', height: '36px', background: otherUser?.role === 'rider' ? 'var(--accent-light)' : 'var(--primary-light)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: otherUser?.role === 'rider' ? 'var(--accent)' : 'var(--primary)' }}>
+          <User size={20} />
         </div>
-        <h1 style={{ fontSize: '1rem', fontWeight: '700' }}>Chat Support</h1>
+        <div>
+            <h1 style={{ fontSize: '0.95rem', fontWeight: '900', color: 'var(--text-main)' }}>{otherUser?.name || 'Loading...'}</h1>
+            <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'capitalize' }}>{otherUser?.role || 'User'}</p>
+        </div>
       </header>
 
       <div style={{ flex: 1, overflowY: 'auto', padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>

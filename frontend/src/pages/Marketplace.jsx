@@ -48,15 +48,6 @@ const Marketplace = ({ user }) => {
     }
     
     if (activeCategory === 'All') return base;
-    
-    if (activeCategory === 'Nearby') {
-        const userBarangay = (user?.barangay || '').toLowerCase().trim();
-        if (!userBarangay) return base; // If user hasn't set barangay, show all
-        return base.filter(product => {
-            const productBarangay = (product.barangay || product.location || '').toLowerCase();
-            return productBarangay.includes(userBarangay);
-        });
-    }
 
     return base.filter(product => product.category === activeCategory);
   }, [searchTerm, activeCategory, filteredProducts, user?.barangay]);
@@ -95,7 +86,7 @@ const Marketplace = ({ user }) => {
         </div>
 
         <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '4px', scrollbarWidth: 'none' }}>
-          {['All', 'Nearby', 'Vegetables', 'Fruits', 'Root Crops'].map((cat) => (
+          {['All', 'Vegetables', 'Fruits', 'Root Crops'].map((cat) => (
             <button 
               key={cat}
               onClick={() => setActiveCategory(cat)}
@@ -111,7 +102,7 @@ const Marketplace = ({ user }) => {
                 whiteSpace: 'nowrap'
               }}
             >
-              {cat === 'Nearby' ? <><MapPin size={14} /> Nearby</> : cat}
+              {cat}
             </button>
           ))}
         </div>

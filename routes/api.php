@@ -37,21 +37,27 @@ Route::get('/user', function (Request $request) {
 Route::get('products/farmer/{farmer_id}', [\App\Http\Controllers\ProductController::class, 'getFarmerProducts']);
 Route::get('orders/farmer/{id}', [\App\Http\Controllers\OrderController::class, 'getFarmerOrders']);
 Route::get('orders/retailer/{id}', [\App\Http\Controllers\OrderController::class, 'getRetailerOrders']);
+Route::get('orders/rider/{id}', [\App\Http\Controllers\OrderController::class, 'getRiderOrders']);
 Route::post('orders/{id}/verify-payment', [\App\Http\Controllers\OrderController::class, 'verifyPayment']);
 
 Route::apiResource('products', \App\Http\Controllers\ProductController::class);
 Route::apiResource('orders', \App\Http\Controllers\OrderController::class);
 
 // User Management & Admin
+Route::get('admin/users', [\App\Http\Controllers\UserController::class, 'index']);
 Route::get('admin/pending-users', [\App\Http\Controllers\UserController::class, 'getPendingUsers']);
 Route::post('admin/verify-user/{id}', [\App\Http\Controllers\UserController::class, 'verifyUser']);
 Route::get('admin/stats', [\App\Http\Controllers\UserController::class, 'getAdminStats']);
 Route::post('admin/riders', [\App\Http\Controllers\UserController::class, 'storeRider']);
+Route::post('admin/broadcast', [\App\Http\Controllers\UserController::class, 'broadcastAnnouncement']);
 Route::put('users/{id}', [\App\Http\Controllers\UserController::class, 'updateProfile']);
 Route::get('admin/orders', [\App\Http\Controllers\OrderController::class, 'index']); // Get all orders for admin
 
+Route::post('notifications/mark-all-read', [\App\Http\Controllers\NotificationController::class, 'markAllAsRead']);
 Route::apiResource('notifications', \App\Http\Controllers\NotificationController::class);
 
+Route::get('messages/inbox/{userId}', [\App\Http\Controllers\MessageController::class, 'inbox']);
 Route::get('messages/{userId1}/{userId2}', [\App\Http\Controllers\MessageController::class, 'index']);
 Route::post('messages', [\App\Http\Controllers\MessageController::class, 'store']);
+Route::get('users/{id}', [\App\Http\Controllers\UserController::class, 'show']);
 Route::delete('users/{id}', [\App\Http\Controllers\UserController::class, 'destroy']);
