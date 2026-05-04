@@ -19,6 +19,10 @@ import OrderDetail from './pages/Retailer/OrderDetail';
 import OrderTracking from './pages/Retailer/OrderTracking';
 import Notifications from './pages/Notifications';
 import Profile from './pages/Profile';
+import AdminSettings from './pages/Admin/Settings';
+import FinancialLogs from './pages/Admin/FinancialLogs';
+import Chat from './pages/Chat';
+import RiderDashboard from './pages/Rider/Dashboard';
 import { useToast } from './components/Toast';
 import './index.css';
 
@@ -108,6 +112,7 @@ function App() {
                 <Route path="/" element={
                   user.role === 'admin' ? <AdminDashboard user={user} /> : 
                   user.role === 'farmer' ? <FarmerDashboard user={user} /> : 
+                  user.role === 'rider' ? <RiderDashboard user={user} /> :
                   <RetailerDashboard user={user} />
                 } />
                 <Route path="/marketplace" element={<Marketplace user={user} />} />
@@ -121,9 +126,12 @@ function App() {
                 <Route path="/orders/:id" element={<OrderDetail user={user} />} />
                 <Route path="/orders/:id/track" element={<OrderTracking user={user} />} />
                 <Route path="/notifications" element={<Notifications user={user} />} />
+                <Route path="/chat/:otherUserId" element={<Chat user={user} />} />
                 <Route path="/farmer/manage" element={<ManageHarvests user={user} />} />
                 <Route path="/admin/verify" element={<TransactionVerification user={user} />} />
                 <Route path="/admin/users" element={<UserVerification user={user} />} />
+                <Route path="/admin/settings" element={<AdminSettings user={user} />} />
+                <Route path="/admin/logs" element={<FinancialLogs user={user} />} />
                 <Route path="/profile" element={<Profile user={user} onLogout={() => {
                   setUser(null);
                   localStorage.removeItem('agrichain_user');

@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { Home, ShoppingBag, ClipboardList, Bell, User } from 'lucide-react';
+import { Home, ShoppingBag, ClipboardList, Bell, User, Settings } from 'lucide-react';
 
 const Navigation = ({ role }) => {
   return (
@@ -31,6 +31,13 @@ const Navigation = ({ role }) => {
         <User size={24} />
         <span>Profile</span>
       </NavLink>
+
+      {role === 'admin' && (
+        <NavLink to="/admin/settings" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+          <Settings size={24} />
+          <span>Settings</span>
+        </NavLink>
+      )}
     </nav>
   );
 };

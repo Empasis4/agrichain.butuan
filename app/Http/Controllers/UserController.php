@@ -51,4 +51,12 @@ class UserController extends Controller
             'pending_payments' => \App\Models\Order::whereIn('status', ['pending'])->count(),
         ];
     }
+
+    // Profile: Soft delete user
+    public function destroy($id)
+    {
+        $user = User::findOrFail($id);
+        $user->delete();
+        return response()->json(['message' => 'User deleted successfully']);
+    }
 }

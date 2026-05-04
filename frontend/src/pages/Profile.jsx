@@ -1,18 +1,43 @@
 import React from 'react';
-import { LogOut, User, MapPin, Phone, Mail } from 'lucide-react';
+import { LogOut, User, MapPin, Phone, Mail, Edit2 } from 'lucide-react';
 
 const Profile = ({ user, onLogout }) => {
   return (
     <div className="profile-page">
-      <header style={{ textAlign: 'center', marginBottom: '32px' }}>
-        <div style={{ width: '100px', height: '100px', background: 'var(--primary)', borderRadius: '50%', margin: '0 auto 16px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}>
-          <User size={48} />
+      <div className="profile-header" style={{ textAlign: 'center', marginBottom: '24px' }}>
+        <div style={{ position: 'relative', width: '100px', height: '100px', margin: '0 auto 12px' }}>
+            <div style={{ 
+            width: '100px', height: '100px', background: 'var(--primary)', borderRadius: '50%', 
+            display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: '2rem', fontWeight: '800',
+            overflow: 'hidden'
+            }}>
+                {user.profile_picture ? <img src={user.profile_picture} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : user.name?.charAt(0) || 'U'}
+            </div>
+            <button 
+                onClick={() => document.getElementById('profile-pic-upload').click()}
+                style={{ position: 'absolute', bottom: '0', right: '0', background: '#fff', border: '1px solid #ddd', borderRadius: '50%', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+            >
+                <Edit2 size={16} color="var(--primary)" />
+            </button>
+            <input 
+                id="profile-pic-upload" type="file" accept="image/*" hidden 
+                onChange={(e) => {
+                    const file = e.target.files[0];
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.onloadend = () => {
+                            const updatedUser = {...user, profile_picture: reader.result};
+                            localStorage.setItem('agrichain_user', JSON.stringify(updatedUser));
+                            window.location.reload();
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                }}
+            />
         </div>
-        <h1 style={{ fontSize: '1.5rem' }}>{user.name || 'User'}</h1>
-        <span className="badge" style={{ background: '#E8F5E9', color: 'var(--primary)', marginTop: '8px', display: 'inline-block' }}>
-          {user.role.toUpperCase()}
-        </span>
-      </header>
+        <h1 style={{ fontSize: '1.25rem', fontWeight: '800' }}>{user.name || 'User Name'}</h1>
+        <p style={{ color: 'var(--text-muted)', textTransform: 'capitalize' }}>{user.role} • Member since 2026</p>
+      </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
         <div className="card" style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
@@ -35,11 +60,39 @@ const Profile = ({ user, onLogout }) => {
           <MapPin size={20} color="var(--text-muted)" />
           <div>
             <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Location</p>
-            <p style={{ fontWeight: '500' }}>{user.location || 'Butuan City'}</p>
+            <p style={{ fontWeight: '500' }}>{user.barangay ? `${user.barangay}, ` : ''}{user.location || 'Butuan City'}</p>
           </div>
         </div>
 
-        <button className="btn" style={{ marginTop: '24px', background: '#FFEBEE', color: '#D32F2F' }} onClick={onLogout}>
+        <div className="card" style={{ marginTop: '16px' }}>
+            <h2 style={{ fontSize: '1rem', marginBottom: '16px', fontWeight: '700' }}>Settings & Preferences</h2>
+            
+            {user.role === 'farmer' && (
+                <div style={{ marginBottom: '16px' }}>
+                    <p style={{ fontSize: '0.85rem', fontWeight: '600', marginBottom: '8px' }}>GCash Payment Info</p>
+                    <input type="text" placeholder="GCash Number" defaultValue={user.gcash_number || ''} style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #ddd', marginBottom: '8px', fontSize: '0.85rem' }} />
+                    <input type="text" placeholder="GCash QR Code (Image URL/Base64)" defaultValue={user.gcash_qr || ''} style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #ddd', fontSize: '0.85rem' }} />
+                    <button className="btn btn-primary" style={{ marginTop: '8px', padding: '8px 16px', fontSize: '0.8rem' }}>Save GCash Info</button>
+                </div>
+            )}
+            
+            {user.role === 'retailer' && (
+                <div style={{ marginBottom: '16px' }}>
+                    <p style={{ fontSize: '0.85rem', fontWeight: '600', marginBottom: '8px' }}>Default Delivery Address</p>
+                    <input type="text" placeholder="Enter default address..." defaultValue={user.default_delivery_address || ''} style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #ddd', fontSize: '0.85rem' }} />
+                    <button className="btn btn-primary" style={{ marginTop: '8px', padding: '8px 16px', fontSize: '0.8rem' }}>Save Address</button>
+                </div>
+            )}
+
+            <div style={{ marginTop: '24px', paddingTop: '16px', borderTop: '1px solid #eee' }}>
+                <p style={{ fontSize: '0.85rem', fontWeight: '600', color: '#D32F2F', marginBottom: '8px' }}>Danger Zone</p>
+                <button className="btn" style={{ background: '#FFEBEE', color: '#D32F2F', width: '100%', padding: '10px', borderRadius: '8px', fontSize: '0.9rem', fontWeight: '600' }} onClick={() => { if(window.confirm('Are you sure you want to deactivate your account?')) { onLogout(); } }}>
+                    Deactivate / Soft Delete Account
+                </button>
+            </div>
+        </div>
+
+        <button className="btn" style={{ marginTop: '8px', background: '#f5f5f5', color: '#333' }} onClick={onLogout}>
           <LogOut size={20} /> Logout
         </button>
       </div>

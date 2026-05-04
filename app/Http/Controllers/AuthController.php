@@ -15,10 +15,13 @@ class AuthController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:8',
-            'role' => 'required|in:farmer,retailer',
+            'role' => 'required|in:farmer,retailer,rider',
             'phone' => 'nullable|string',
             'location' => 'nullable|string',
+            'barangay' => 'nullable|string',
             'verification_id' => 'nullable|string',
+            'permit_image' => 'nullable|string',
+            'farmer_id_image' => 'nullable|string',
         ]);
 
         $user = User::create([
@@ -28,7 +31,10 @@ class AuthController extends Controller
             'role' => $validated['role'],
             'phone' => $validated['phone'] ?? null,
             'location' => $validated['location'] ?? null,
+            'barangay' => $validated['barangay'] ?? null,
             'verification_id' => $validated['verification_id'] ?? null,
+            'permit_image' => $validated['permit_image'] ?? null,
+            'farmer_id_image' => $validated['farmer_id_image'] ?? null,
             'status' => 'pending', // Default to pending for verification
         ]);
 

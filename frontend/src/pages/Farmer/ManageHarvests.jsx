@@ -43,21 +43,30 @@ const ManageHarvests = ({ user }) => {
   const handleAddProduct = async (e) => {
     e.preventDefault();
     try {
+      const imagesArr = Array.isArray(newProduct.image_path) ? newProduct.image_path : (newProduct.image_path ? [newProduct.image_path] : []);
+      if (imagesArr.length < 3 || imagesArr.length > 5) {
+          showToast('Please upload exactly 3 to 5 images for the product.', 'warning');
+          return;
+      }
+      
+      const payload = {
+          ...newProduct,
+          image_path: JSON.stringify(imagesArr),
+          farmer_id: user.id || 1 
+      };
+
       if (editingId) {
-        const res = await axios.put(`/api/products/${editingId}`, newProduct);
+        const res = await axios.put(`/api/products/${editingId}`, payload);
         setProducts(products.map(p => p.id === editingId ? res.data : p));
         setEditingId(null);
         showToast('Harvest updated successfully!', 'success');
       } else {
-        const res = await axios.post('/api/products', { 
-          ...newProduct, 
-          farmer_id: user.id || 1 
-        });
+        const res = await axios.post('/api/products', payload);
         setProducts([...products, res.data]);
         showToast('Harvest listed successfully!', 'success');
       }
       setShowAddForm(false);
-      setNewProduct({ name: '', category: 'Vegetables', price_per_kg: '', quantity_available: '', unit: 'kg', harvest_date: new Date().toISOString().split('T')[0], description: '', image_path: '' });
+      setNewProduct({ name: '', category: 'Vegetables', price_per_kg: '', quantity_available: '', unit: 'kg', harvest_date: new Date().toISOString().split('T')[0], description: '', image_path: [] });
     } catch (error) {
       showToast('Error: ' + (error.response?.data?.message || error.message), 'error');
     }
@@ -129,39 +138,64 @@ const ManageHarvests = ({ user }) => {
               type="number" placeholder="Available Quantity" required className="input" 
               value={newProduct.quantity_available} onChange={e => setNewProduct({...newProduct, quantity_available: e.target.value})}
             />
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              <label style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-muted)' }}>Product Photo</label>
-              <div 
-                onClick={() => document.getElementById('product-image-upload').click()}
-                style={{ 
-                  width: '100%', height: '120px', border: '2px dashed #ddd', borderRadius: '12px', 
-                  display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', 
-                  cursor: 'pointer', overflow: 'hidden', position: 'relative', background: '#fcfcfc'
-                }}
-              >
-                {newProduct.image_path ? (
-                  <div style={{ width: '100%', height: '100%', position: 'relative' }}>
-                    <img src={newProduct.image_path} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                    <div style={{ position: 'absolute', bottom: '8px', right: '8px', background: 'rgba(0,0,0,0.5)', color: '#fff', padding: '4px 8px', borderRadius: '4px', fontSize: '0.7rem' }}>Change Photo</div>
-                  </div>
-                ) : (
-                  <>
-                    <Plus size={32} color="#aaa" />
-                    <span style={{ fontSize: '0.8rem', color: '#aaa', marginTop: '8px' }}>Click to attach photo</span>
-                  </>
-                )}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
                 <input 
-                  id="product-image-upload" type="file" accept="image/*" hidden 
+                  type="checkbox" 
+                  id="is_preorder"
+                  checked={newProduct.is_preorder || false}
+                  onChange={e => setNewProduct({...newProduct, is_preorder: e.target.checked})}
+                />
+                <label htmlFor="is_preorder" style={{ fontSize: '0.9rem', fontWeight: '600' }}>Enable Advance Booking (Next Month Harvest)</label>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <label style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-muted)' }}>Product Photos (3 to 5 images required)</label>
+              <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '8px' }}>
+                  {(Array.isArray(newProduct.image_path) ? newProduct.image_path : (newProduct.image_path ? [newProduct.image_path] : [])).map((img, idx) => (
+                    <div key={idx} style={{ width: '80px', height: '80px', borderRadius: '8px', overflow: 'hidden', position: 'relative', flexShrink: 0 }}>
+                        <img src={img} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        <button type="button" onClick={() => {
+                            const newArr = (Array.isArray(newProduct.image_path) ? [...newProduct.image_path] : [newProduct.image_path]).filter((_, i) => i !== idx);
+                            setNewProduct({...newProduct, image_path: newArr});
+                        }} style={{ position: 'absolute', top: '2px', right: '2px', background: 'rgba(255,0,0,0.7)', color: 'white', border: 'none', borderRadius: '50%', width: '20px', height: '20px', fontSize: '12px', cursor: 'pointer' }}>×</button>
+                    </div>
+                  ))}
+                  
+                  {(!Array.isArray(newProduct.image_path) || newProduct.image_path.length < 5) && (
+                      <div 
+                        onClick={() => document.getElementById('product-image-upload').click()}
+                        style={{ 
+                          width: '80px', height: '80px', border: '2px dashed #ddd', borderRadius: '8px', 
+                          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', 
+                          cursor: 'pointer', background: '#fcfcfc', flexShrink: 0
+                        }}
+                      >
+                        <Plus size={24} color="#aaa" />
+                      </div>
+                  )}
+              </div>
+              <input 
+                  id="product-image-upload" type="file" accept="image/*" multiple hidden 
                   onChange={(e) => {
-                    const file = e.target.files[0];
-                    if (file) {
-                      const reader = new FileReader();
-                      reader.onloadend = () => setNewProduct({...newProduct, image_path: reader.result});
-                      reader.readAsDataURL(file);
+                    const files = Array.from(e.target.files);
+                    const currentImages = Array.isArray(newProduct.image_path) ? newProduct.image_path : (newProduct.image_path ? [newProduct.image_path] : []);
+                    
+                    if (currentImages.length + files.length > 5) {
+                        showToast('Maximum of 5 photos allowed', 'warning');
+                        return;
                     }
+                    
+                    files.forEach(file => {
+                        const reader = new FileReader();
+                        reader.onloadend = () => {
+                            setNewProduct(prev => {
+                                const prevArr = Array.isArray(prev.image_path) ? prev.image_path : (prev.image_path ? [prev.image_path] : []);
+                                return {...prev, image_path: [...prevArr, reader.result]};
+                            });
+                        };
+                        reader.readAsDataURL(file);
+                    });
                   }}
                 />
-              </div>
             </div>
             <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
               <button type="button" onClick={() => setShowAddForm(false)} className="btn" style={{ flex: 1, background: '#eee', color: 'var(--text-main)' }}>Cancel</button>
@@ -182,7 +216,7 @@ const ManageHarvests = ({ user }) => {
                   width: '60px', height: '60px', background: '#f5f5f5', borderRadius: '12px', 
                   display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem', overflow: 'hidden' 
                 }}>
-                  {p.image_path ? <img src={p.image_path} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : '📦'}
+                  {p.image_path ? <img src={p.image_path.includes('[') ? JSON.parse(p.image_path)[0] : p.image_path} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : '📦'}
                 </div>
                 <div style={{ flex: 1 }}>
                   <h3 style={{ fontSize: '1rem', fontWeight: '700', marginBottom: '4px' }}>{p.name}</h3>

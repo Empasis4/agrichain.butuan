@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Users, CreditCard, ShieldCheck, ChevronRight, Bell, Package, TrendingUp } from 'lucide-react';
+import { Users, CreditCard, ShieldCheck, ChevronRight, Bell, Package, TrendingUp, FileText, Star } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
@@ -127,6 +127,37 @@ const AdminDashboard = ({ user }) => {
               <h3 style={{ fontSize: '1.05rem', fontWeight: '700' }}>User Verification</h3>
               <p style={{ fontSize: '0.85rem', color: stats.pending_verifications > 0 ? 'var(--primary)' : 'var(--text-muted)', fontWeight: stats.pending_verifications > 0 ? '700' : '400' }}>
                 {stats.pending_verifications} User{stats.pending_verifications !== 1 ? 's' : ''} awaiting approval
+              </p>
+            </div>
+            <ChevronRight size={20} color="#ccc" />
+          </div>
+
+          <div className="card"
+            style={{ display: 'flex', alignItems: 'center', gap: '16px', cursor: 'pointer', padding: '16px', borderLeft: '5px solid var(--primary)' }}
+            onClick={() => navigate('/admin/logs')}
+          >
+            <div style={{ width: '56px', height: '56px', background: '#E3F2FD', borderRadius: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <FileText color="#1976D2" size={28} />
+            </div>
+            <div style={{ flex: 1 }}>
+              <h3 style={{ fontSize: '1.05rem', fontWeight: '700' }}>Financial Audit Logs</h3>
+              <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                Monitor payouts and payment alerts
+              </p>
+            </div>
+            <ChevronRight size={20} color="#ccc" />
+          </div>
+
+          <div className="card"
+            style={{ display: 'flex', alignItems: 'center', gap: '16px', cursor: 'pointer', padding: '16px', borderLeft: '5px solid var(--accent)' }}
+          >
+            <div style={{ width: '56px', height: '56px', background: '#FFF3E0', borderRadius: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <Star color="#E65100" size={28} />
+            </div>
+            <div style={{ flex: 1 }}>
+              <h3 style={{ fontSize: '1.05rem', fontWeight: '700' }}>Reviews & Feedback</h3>
+              <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                Monitor customer satisfaction
               </p>
             </div>
             <ChevronRight size={20} color="#ccc" />

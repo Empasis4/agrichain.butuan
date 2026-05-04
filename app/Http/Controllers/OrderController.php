@@ -33,6 +33,10 @@ class OrderController extends Controller
             'items.*.product_id' => 'required|exists:products,id',
             'items.*.quantity' => 'required|numeric',
             'items.*.price_at_time' => 'required|numeric',
+            'shipping_fee' => 'nullable|numeric',
+            'payment_proof_image' => 'nullable|string',
+            'payment_reference' => 'nullable|string',
+            'map_coordinates' => 'nullable|string',
         ]);
 
         $order = \App\Models\Order::create([
@@ -40,7 +44,11 @@ class OrderController extends Controller
             'total_price' => $validated['total_price'],
             'payment_method' => $validated['payment_method'],
             'delivery_address' => $validated['delivery_address'],
-            'status' => 'pending'
+            'status' => 'pending',
+            'shipping_fee' => $validated['shipping_fee'] ?? 150.00,
+            'payment_proof_image' => $validated['payment_proof_image'] ?? null,
+            'payment_reference' => $validated['payment_reference'] ?? null,
+            'map_coordinates' => $validated['map_coordinates'] ?? null,
         ]);
 
         foreach ($validated['items'] as $item) {

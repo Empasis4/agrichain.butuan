@@ -47,3 +47,7 @@ Route::put('users/{id}', [\App\Http\Controllers\UserController::class, 'updatePr
 Route::get('admin/orders', [\App\Http\Controllers\OrderController::class, 'index']); // Get all orders for admin
 
 Route::apiResource('notifications', \App\Http\Controllers\NotificationController::class);
+
+Route::get('messages/{userId1}/{userId2}', [\App\Http\Controllers\MessageController::class, 'index']);
+Route::post('messages', [\App\Http\Controllers\MessageController::class, 'store']);
+Route::delete('users/{id}', [\App\Http\Controllers\UserController::class, 'destroy']);

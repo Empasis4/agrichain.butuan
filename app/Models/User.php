@@ -9,7 +9,7 @@ use Illuminate\Notifications\Notifiable;
 
 class User extends Authenticatable
 {
-    use HasFactory, Notifiable;
+    use HasFactory, Notifiable, \Illuminate\Database\Eloquent\SoftDeletes;
 
     /**
      * The attributes that are mass assignable.
@@ -18,6 +18,7 @@ class User extends Authenticatable
      */
     protected $fillable = [
         'name', 'email', 'password', 'role', 'phone', 'location', 'avatar', 'status', 'verification_id',
+        'barangay', 'permit_image', 'farmer_id_image', 'profile_picture', 'gcash_number', 'gcash_qr', 'default_delivery_address'
     ];
 
     /**

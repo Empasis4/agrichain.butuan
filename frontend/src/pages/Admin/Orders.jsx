@@ -50,7 +50,7 @@ const AdminOrders = ({ user }) => {
       </header>
 
       <div style={{ display: 'flex', gap: '8px', marginBottom: '20px', overflowX: 'auto', paddingBottom: '8px' }}>
-        {['all', 'pending', 'paid', 'shipped', 'delivered', 'cancelled'].map(s => (
+        {['all', 'pending', 'paid', 'shipped', 'delivered', 'return', 'cancelled'].map(s => (
           <button 
             key={s}
             onClick={() => setFilter(s)}
@@ -143,12 +143,20 @@ const AdminOrders = ({ user }) => {
                     )}
 
                     {order.status === 'shipped' && (
-                      <button 
-                        onClick={() => handleUpdate(order.id, { status: 'delivered' })}
-                        className="btn btn-primary" style={{ width: '100%', padding: '12px', fontSize: '0.9rem', background: 'var(--primary)' }}
-                      >
-                        📦 Complete Delivery
-                      </button>
+                      <div style={{ display: 'flex', gap: '8px' }}>
+                        <button 
+                          onClick={() => handleUpdate(order.id, { status: 'delivered' })}
+                          className="btn btn-primary" style={{ flex: 1, padding: '12px', fontSize: '0.9rem', background: 'var(--primary)' }}
+                        >
+                          📦 Complete Delivery
+                        </button>
+                        <button 
+                          onClick={() => handleUpdate(order.id, { status: 'return' })}
+                          className="btn" style={{ flex: 1, padding: '12px', fontSize: '0.9rem', background: '#FFF3E0', color: '#E65100', border: '1px solid #FFE0B2' }}
+                        >
+                          🔄 Mark Return
+                        </button>
+                      </div>
                     )}
 
                     <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>

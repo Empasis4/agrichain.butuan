@@ -86,20 +86,14 @@ const Register = ({ onRegister }) => {
           onChange={(e) => setFormData({...formData, phone: e.target.value})}
           style={{ width: '100%', padding: '14px 16px', borderRadius: '12px', border: '1px solid #ddd', outline: 'none' }}
         />
-        <div style={{ position: 'relative' }}>
-          <select 
-            required
-            value={formData.location}
-            onChange={(e) => setFormData({...formData, location: e.target.value})}
-            style={{ width: '100%', padding: '14px 40px 14px 16px', borderRadius: '12px', border: '1px solid #ddd', outline: 'none', background: '#fff', appearance: 'none', fontSize: '1rem' }}
-          >
-            <option value="" disabled>Select Barangay</option>
-            {['Ambago', 'Baan KM 3', 'Bancasi', 'Banza', 'Bit-os', 'Bonbon', 'Buhangin', 'Doongan', 'Holy Redeemer', 'Libertad', 'Lumbocan', 'Maon', 'Obrero', 'Pangabugan', 'San Vicente', 'Villa Kananga'].map(brgy => (
-              <option key={brgy} value={brgy}>{brgy}</option>
-            ))}
-          </select>
-          <ChevronRight size={18} style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%) rotate(90deg)', color: 'var(--text-muted)', pointerEvents: 'none' }} />
-        </div>
+        <input 
+          type="text" 
+          placeholder="Barangay (Type your barangay)" 
+          required
+          value={formData.barangay || ''}
+          onChange={(e) => setFormData({...formData, barangay: e.target.value})}
+          style={{ width: '100%', padding: '14px 16px', borderRadius: '12px', border: '1px solid #ddd', outline: 'none' }}
+        />
         <input 
           type="text" 
           placeholder={role === 'farmer' ? "Farmer RSBSA / ID Number" : "DTI / Business Permit Number"} 
@@ -108,6 +102,24 @@ const Register = ({ onRegister }) => {
           onChange={(e) => setFormData({...formData, verification_id: e.target.value})}
           style={{ width: '100%', padding: '14px 16px', borderRadius: '12px', border: '1px solid #ddd', outline: 'none' }}
         />
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <label style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                {role === 'farmer' ? "Upload Farmer ID (Image URL/Base64)" : "Upload Business Permit (Image URL/Base64)"}
+            </label>
+            <input 
+              type="text" 
+              placeholder="Enter Image URL or attach later" 
+              value={role === 'farmer' ? (formData.farmer_id_image || '') : (formData.permit_image || '')}
+              onChange={(e) => {
+                  if (role === 'farmer') {
+                      setFormData({...formData, farmer_id_image: e.target.value});
+                  } else {
+                      setFormData({...formData, permit_image: e.target.value});
+                  }
+              }}
+              style={{ width: '100%', padding: '14px 16px', borderRadius: '12px', border: '1px solid #ddd', outline: 'none' }}
+            />
+        </div>
         <input 
           type="password" 
           placeholder="Password" 
