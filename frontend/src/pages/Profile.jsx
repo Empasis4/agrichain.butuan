@@ -122,7 +122,10 @@ const Profile = ({ user, onLogout }) => {
                                 await axios.put(`/api/users/${user.id}`, { gcash_number: num, gcash_qr: user.gcash_qr });
                                 localStorage.setItem('agrichain_user', JSON.stringify(updatedUser));
                                 alert('Payment information saved successfully!');
-                            } catch (err) { alert('Error saving info'); }
+                            } catch (err) { 
+                                console.error('Save error:', err.response?.data || err.message);
+                                alert('Error saving info: ' + (err.response?.data?.message || err.message)); 
+                            }
                         }}
                     >
                         Save Payment Settings

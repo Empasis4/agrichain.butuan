@@ -90,8 +90,18 @@ const ManageHarvests = ({ user }) => {
 
   const [editingId, setEditingId] = useState(null);
   const handleEdit = (p) => {
+    let imgs = [];
+    try {
+        if (p.image_path) {
+            imgs = p.image_path.startsWith('[') ? JSON.parse(p.image_path) : [p.image_path];
+        }
+    } catch (e) { imgs = [p.image_path]; }
+    
     setEditingId(p.id);
-    setNewProduct(p);
+    setNewProduct({
+        ...p,
+        image_path: imgs
+    });
     setShowAddForm(true);
   };
 

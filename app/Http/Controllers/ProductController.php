@@ -23,10 +23,12 @@ class ProductController extends Controller
             'unit' => 'required|string',
             'harvest_date' => 'required|date',
             'description' => 'nullable|string',
+            'image_path' => 'nullable|string',
+            'is_preorder' => 'nullable|boolean'
         ]);
 
         $product = Product::create($validated);
-        return response()->json($product, 201);
+        return response()->json($product->load('farmer'), 201);
     }
 
     public function show($id)

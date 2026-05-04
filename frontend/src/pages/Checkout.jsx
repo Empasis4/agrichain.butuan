@@ -7,9 +7,13 @@ import axios from 'axios';
 const Checkout = ({ user: userProp }) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { product, quantity: initialQty } = location.state || {};
+  const user = userProp;
+
   const [paymentMethod, setPaymentMethod] = useState('gcash');
   const [isProcessing, setIsProcessing] = useState(false);
-  const [deliveryAddress, setDeliveryAddress] = useState(userProp?.default_delivery_address || user?.default_delivery_address || 'Butuan Fresh Market, North Montilla Blvd');
+  const [quantity, setQuantity] = useState(initialQty || 1);
+  const [deliveryAddress, setDeliveryAddress] = useState(user?.default_delivery_address || 'Butuan Fresh Market, North Montilla Blvd');
 
   // Redirect if no product
   if (!product) {

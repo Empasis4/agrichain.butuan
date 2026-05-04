@@ -133,12 +133,16 @@ const Marketplace = ({ user }) => {
                     let imgs = [];
                     try {
                       if (product.image_path) {
-                        imgs = product.image_path.startsWith('[') ? JSON.parse(product.image_path) : [product.image_path];
+                        imgs = typeof product.image_path === 'string' && product.image_path.startsWith('[') 
+                               ? JSON.parse(product.image_path) 
+                               : (Array.isArray(product.image_path) ? product.image_path : [product.image_path]);
                       }
                     } catch (e) { imgs = [product.image_path]; }
                     
-                    if (imgs.length > 0 && imgs[0]) {
-                      return <img src={imgs[0]} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />;
+                    const firstImg = imgs.find(img => img && img !== '');
+                    
+                    if (firstImg) {
+                      return <img src={firstImg} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />;
                     }
                     return (product.name || '').includes('Onion') ? '🧅' : (product.name || '').includes('Banana') ? '🍌' : (product.name || '').includes('Tomato') ? '🍅' : (product.name || '').includes('Sweet') ? '🌽' : '🍆';
                   })()}
@@ -180,6 +184,7 @@ const Marketplace = ({ user }) => {
                   </div>
                 </div>
             </div>
+
             {selectedProduct?.id === product.id && (
                 <div style={{ 
                     marginTop: '12px', paddingTop: '12px', borderTop: '1px solid #eee', 
