@@ -26,7 +26,7 @@ const Checkout = ({ user: userProp }) => {
 
   const maxQty = parseFloat(product.quantity_available) || 999;
   const pricePerUnit = parseFloat(product.price_per_kg) || 0;
-  const total = pricePerUnit * quantity;
+
 
   const [paymentReference, setPaymentReference] = useState('');
   const [paymentProof, setPaymentProof] = useState('');
