@@ -163,7 +163,15 @@ const Marketplace = ({ user }) => {
                       {product.farmer?.name || 'AgriChain Farmer'} • ⭐ 4.8
                     </p>
                     <button 
-                      onClick={(e) => { e.stopPropagation(); navigate(`/chat/${product.farmer_id || product.farmer?.id}`); }}
+                      onClick={(e) => { 
+                        e.stopPropagation(); 
+                        const fid = product.farmer_id || product.farmer?.id;
+                        if (!fid) {
+                            showToast('Farmer contact info not available.', 'error');
+                            return;
+                        }
+                        navigate(`/chat/${fid}`); 
+                      }}
                       style={{ 
                         background: 'var(--primary-light)', border: 'none', borderRadius: '24px', 
                         padding: '6px 12px', display: 'flex', alignItems: 'center', justifyContent: 'center', 
