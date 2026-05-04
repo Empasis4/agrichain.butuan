@@ -127,15 +127,14 @@ class OrderController extends Controller
     {
         $order = \App\Models\Order::findOrFail($id);
         
-        // In a real scenario, this would interface with a payment gateway (GCash API)
-        // For this high-fidelity demo, we'll mark it as approved.
-        $order->update(['status' => 'approved']);
+        // Mark as paid
+        $order->update(['status' => 'paid']);
 
         // Create notification for the retailer
         \App\Models\Notification::create([
             'user_id' => $order->retailer_id,
-            'title' => 'Payment Verified',
-            'message' => "Your payment for ORD-{$order->id} has been verified. Fulfillment starting soon!",
+            'title' => '💰 Payment Verified',
+            'message' => "Your payment for ORD-{$order->id} has been verified by Admin. Fulfillment starting now!",
             'type' => 'order'
         ]);
 
@@ -145,8 +144,8 @@ class OrderController extends Controller
         foreach ($farmerIds as $farmerId) {
             \App\Models\Notification::create([
                 'user_id' => $farmerId,
-                'title' => 'New Paid Order!',
-                'message' => "Payment for ORD-{$order->id} is verified. Please prepare for delivery.",
+                'title' => '📦 Prepare for Shipment',
+                'message' => "Order ORD-{$order->id} is now PAID. Please prepare the items for the rider.",
                 'type' => 'order'
               ]);
         }

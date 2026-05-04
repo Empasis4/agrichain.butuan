@@ -46,32 +46,35 @@ function App() {
       return null;
     }
   });
-  const [lastNotifId, setLastNotifId] = React.useState(0);
+  const [notifications, setNotifications] = React.useState([]);
 
   const { showToast } = useToast();
 
   React.useEffect(() => {
-    if (!user) return;
-
-    const pollNotifications = async () => {
+    if (!user?.id) return;
+    
+    const fetchNotifications = async () => {
       try {
         const res = await axios.get(`/api/notifications?user_id=${user.id}`);
-        const latest = res.data[0];
-        if (latest && latest.id > lastNotifId) {
-          setLastNotifId(latest.id);
-          if (lastNotifId !== 0) {
-            showToast(latest.message, 'success');
+        const newNotifs = res.data;
+        
+        // If we have more notifications than before, show a toast
+        setNotifications(prev => {
+          if (newNotifs.length > prev.length && prev.length > 0) {
+            const latest = newNotifs[0];
+            showToast(`${latest.title || 'New Notification'}: ${latest.message}`, 'info');
           }
-        }
+          return newNotifs;
+        });
       } catch (err) {
-        console.error('Polling error:', err);
+        console.error('Notification poll error:', err);
       }
     };
 
-    const interval = setInterval(pollNotifications, 10000);
-    pollNotifications(); // Initial check
+    fetchNotifications();
+    const interval = setInterval(fetchNotifications, 5000); 
     return () => clearInterval(interval);
-  }, [user, lastNotifId]);
+  }, [user?.id]);
 
   const handleLogin = (role = 'retailer', data = null) => {
     if (!data) return;

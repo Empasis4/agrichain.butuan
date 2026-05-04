@@ -110,21 +110,22 @@ const AdminOrders = ({ user }) => {
                   </p>
                   
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                    {order.status === 'pending' && (
+                    {/* Normalized Status Logic: treat 'approved' as 'paid' */}
+                    {(order.status === 'pending' || order.status === 'approved') && (
                       <button 
                         onClick={() => handleUpdate(order.id, { status: 'paid' })}
                         className="btn btn-primary" style={{ width: '100%', padding: '12px', fontSize: '0.9rem' }}
                       >
-                        ✅ Approve & Mark as Paid
+                        {order.payment_method === 'cod' ? '✅ Confirm & Approve Order' : '💰 Verify GCash Payment'}
                       </button>
                     )}
 
-                    {order.status === 'paid' && (
+                    {(order.status === 'paid' || order.status === 'approved') && (
                       <>
                         <div style={{ position: 'relative' }}>
                           <User size={14} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: '#888' }} />
                           <input 
-                            type="text" placeholder="Type Rider Name..." className="input" 
+                            type="text" placeholder="Assign Rider Name..." className="input" 
                             value={editData.rider_name} onChange={e => setEditData({...editData, rider_name: e.target.value})}
                             style={{ fontSize: '0.85rem', paddingLeft: '32px' }}
                           />
@@ -136,7 +137,7 @@ const AdminOrders = ({ user }) => {
                           }}
                           className="btn btn-primary" style={{ width: '100%', padding: '12px', fontSize: '0.9rem', background: 'var(--accent)' }}
                         >
-                          🚚 Assign Rider & Ship
+                          🚚 Dispatch Rider
                         </button>
                       </>
                     )}
@@ -146,7 +147,7 @@ const AdminOrders = ({ user }) => {
                         onClick={() => handleUpdate(order.id, { status: 'delivered' })}
                         className="btn btn-primary" style={{ width: '100%', padding: '12px', fontSize: '0.9rem', background: 'var(--primary)' }}
                       >
-                        📦 Confirm Delivery
+                        📦 Complete Delivery
                       </button>
                     )}
 

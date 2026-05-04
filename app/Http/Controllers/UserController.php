@@ -47,8 +47,8 @@ class UserController extends Controller
             'pending_verifications' => User::where('status', 'pending')->count(),
             'total_farmers' => User::where('role', 'farmer')->count(),
             'total_retailers' => User::where('role', 'retailer')->count(),
-            'total_revenue' => \App\Models\Order::where('status', 'approved')->sum('total_price'),
-            'pending_payments' => \App\Models\Order::where('status', 'pending')->count(),
+            'total_revenue' => \App\Models\Order::whereIn('status', ['paid', 'shipped', 'delivered', 'approved'])->sum('total_price'),
+            'pending_payments' => \App\Models\Order::whereIn('status', ['pending'])->count(),
         ];
     }
 }
