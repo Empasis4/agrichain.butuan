@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { CreditCard, Truck, ChevronLeft, CheckCircle, Minus, Plus, ShoppingBag } from 'lucide-react';
+import { useToast } from '../components/Toast';
 import axios from 'axios';
 
 const Checkout = ({ user: userProp }) => {
@@ -40,9 +41,14 @@ const Checkout = ({ user: userProp }) => {
     });
   };
 
+  const { showToast } = useToast();
+
   const handlePlaceOrder = async () => {
-    if (!user?.id) { alert('Please log in first.'); return; }
-    if (quantity < 1 || quantity > maxQty) { alert(`Please choose between 1 and ${maxQty} ${product.unit}`); return; }
+    if (!user?.id) { showToast('Please log in first.', 'error'); return; }
+    if (quantity < 1 || quantity > maxQty) { 
+      showToast(`Please choose between 1 and ${maxQty} ${product.unit}`, 'warning'); 
+      return; 
+    }
 
     setIsProcessing(true);
     try {
@@ -76,7 +82,7 @@ const Checkout = ({ user: userProp }) => {
       navigate('/order-success', { state: { orderId: `ORD-${orderId}` } });
     } catch (error) {
       console.error('Order error:', error);
-      alert('Order failed: ' + (error.response?.data?.message || 'Please check your connection.'));
+      showToast('Order failed: ' + (error.response?.data?.message || 'Please check your connection.'), 'error');
     } finally {
       setIsProcessing(false);
     }

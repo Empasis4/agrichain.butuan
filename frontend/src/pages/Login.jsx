@@ -2,11 +2,14 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { LogIn, Lock, Mail } from 'lucide-react';
+import { useToast } from '../components/Toast';
 
 const Login = ({ onLogin }) => {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+
+  const { showToast } = useToast();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -14,16 +17,16 @@ const Login = ({ onLogin }) => {
       const response = await axios.post('/api/login', { email, password });
       const user = response.data.user;
       if (user.status === 'pending') {
-        alert('Your account is still pending verification. Please wait for an Admin to approve your account.');
+        showToast('Your account is still pending verification.', 'warning');
         return;
       }
       onLogin(user.role, user);
     } catch (error) {
       console.error('Login error:', error);
       if (error.response && error.response.status === 401) {
-        alert('Invalid credentials. Please try again.');
+        showToast('Invalid credentials. Please try again.', 'error');
       } else {
-        alert('Server Error: ' + (error.response?.data?.message || error.message) + '. Please check Railway deployment logs.');
+        showToast('Server Error: ' + (error.response?.data?.message || error.message), 'error');
       }
     }
   };
