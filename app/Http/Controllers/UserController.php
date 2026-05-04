@@ -42,12 +42,16 @@ class UserController extends Controller
     // Admin: Get Dashboard Stats
     public function getAdminStats()
     {
+        $today = date('Y-m-d');
         return [
             'total_users' => User::count(),
             'pending_verifications' => User::where('status', 'pending')->count(),
             'total_farmers' => User::where('role', 'farmer')->count(),
             'total_retailers' => User::where('role', 'retailer')->count(),
             'total_revenue' => \App\Models\Order::whereIn('status', ['paid', 'shipped', 'delivered', 'approved'])->sum('total_price'),
+            'ready_for_pickup' => \App\Models\Order::whereIn('status', ['approved', 'paid'])->count(),
+            'out_for_delivery' => \App\Models\Order::where('status', 'shipped')->count(),
+            'delivered_today' => \App\Models\Order::where('status', 'delivered')->whereDate('updated_at', $today)->count(),
             'pending_payments' => \App\Models\Order::whereIn('status', ['pending'])->count(),
         ];
     }

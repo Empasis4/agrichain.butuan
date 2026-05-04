@@ -11,16 +11,21 @@ const AdminDashboard = ({ user }) => {
     total_farmers: 0,
     total_retailers: 0,
     total_revenue: 0,
-    pending_payments: 0
+    ready_for_pickup: 0,
+    out_for_delivery: 0,
+    delivered_today: 0
   });
   const [notifications, setNotifications] = useState([]);
+  const [orders, setOrders] = useState([]);
 
   useEffect(() => {
     fetchStats();
     fetchNotifications();
+    fetchOrders();
     const interval = setInterval(() => {
       fetchStats();
       fetchNotifications();
+      fetchOrders();
     }, 8000);
     return () => clearInterval(interval);
   }, []);
@@ -33,6 +38,13 @@ const AdminDashboard = ({ user }) => {
       console.error('Admin stats error:', error);
     }
   };
+
+  const fetchOrders = async () => {
+    try {
+        const res = await axios.get('/api/admin/orders');
+        setOrders(Array.isArray(res.data) ? res.data : []);
+    } catch (err) { console.error(err); }
+  }
 
   const fetchNotifications = async () => {
     if (!user?.id) return;
@@ -52,13 +64,16 @@ const AdminDashboard = ({ user }) => {
     return `${Math.floor(diff / 1440)}d ago`;
   };
 
+  const readyOrders = orders.filter(o => ['approved', 'paid'].includes(o.status)).slice(0, 3);
+  const activeDeliveries = orders.filter(o => o.status === 'shipped').slice(0, 3);
+
   return (
     <div className="admin-dashboard">
       <header style={{ marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <div>
           <h1 style={{ fontSize: '1.5rem', fontWeight: '800' }}>Admin Control Hub</h1>
           <p style={{ color: 'var(--text-muted)' }}>
-            Platform Health: <span style={{ color: 'var(--primary)', fontWeight: '600' }}>Excellent</span>
+            Logistics Status: <span style={{ color: 'var(--primary)', fontWeight: '600' }}>{stats.out_for_delivery} Active</span>
           </p>
         </div>
         <div onClick={() => navigate('/notifications')} style={{ position: 'relative', cursor: 'pointer' }}>
@@ -73,80 +88,96 @@ const AdminDashboard = ({ user }) => {
         </div>
       </header>
 
-      {/* KPI Grid */}
+      {/* Logistics KPI Grid */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '24px' }}>
-        <div className="card">
-          <Users size={20} color="var(--primary)" />
-          <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '8px' }}>Total Users</p>
-          <h3 style={{ fontSize: '1.2rem', fontWeight: '800' }}>{stats.total_users}</h3>
+        <div className="card" style={{ borderBottom: '3px solid var(--primary)' }}>
+          <Package size={20} color="var(--primary)" />
+          <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '8px' }}>Ready for Pick Up</p>
+          <h3 style={{ fontSize: '1.2rem', fontWeight: '800' }}>{stats.ready_for_pickup}</h3>
         </div>
-        <div className="card">
+        <div className="card" style={{ borderBottom: '3px solid var(--accent)' }}>
+          <TrendingUp size={20} color="var(--accent)" />
+          <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '8px' }}>Out for Delivery</p>
+          <h3 style={{ fontSize: '1.2rem', fontWeight: '800' }}>{stats.out_for_delivery}</h3>
+        </div>
+        <div className="card" style={{ borderBottom: '3px solid var(--primary)' }}>
+          <ShieldCheck size={20} color="var(--primary)" />
+          <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '8px' }}>Delivered Today</p>
+          <h3 style={{ fontSize: '1.2rem', fontWeight: '800' }}>{stats.delivered_today}</h3>
+        </div>
+        <div className="card" style={{ borderBottom: '3px solid var(--warning)' }}>
           <CreditCard size={20} color="var(--warning)" />
-          <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '8px' }}>Gross Revenue</p>
+          <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '8px' }}>Total Earnings</p>
           <h3 style={{ fontSize: '1.2rem', fontWeight: '800' }}>₱{parseFloat(stats.total_revenue || 0).toLocaleString()}</h3>
-        </div>
-        <div className="card">
-          <TrendingUp size={20} color="var(--primary)" />
-          <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '8px' }}>Farmers</p>
-          <h3 style={{ fontSize: '1.2rem', fontWeight: '800' }}>{stats.total_farmers}</h3>
-        </div>
-        <div className="card">
-          <Package size={20} color="var(--accent)" />
-          <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '8px' }}>Retailers</p>
-          <h3 style={{ fontSize: '1.2rem', fontWeight: '800' }}>{stats.total_retailers}</h3>
         </div>
       </div>
 
-      {/* Verification Hub */}
+      {/* Ready for Pick Up Section */}
       <section style={{ marginBottom: '24px' }}>
-        <h2 style={{ fontSize: '1.2rem', fontWeight: '800', marginBottom: '16px' }}>Verification Hub</h2>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+          <h2 style={{ fontSize: '1.1rem', fontWeight: '700' }}>Ready for Pick Up</h2>
+          <span style={{ fontSize: '0.8rem', color: 'var(--primary)', fontWeight: '600', cursor: 'pointer' }} onClick={() => navigate('/admin/logs')}>View History</span>
+        </div>
+        <div className="card" style={{ padding: readyOrders.length > 0 ? '12px' : '24px' }}>
+            {readyOrders.length > 0 ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                    {readyOrders.map(o => (
+                        <div key={o.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #f0f0f0', paddingBottom: '8px' }}>
+                            <div>
+                                <p style={{ fontSize: '0.85rem', fontWeight: '700' }}>#ORD-{o.id} • {o.product?.name || 'Produce'}</p>
+                                <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>From: {o.product?.farmer?.name || 'Local Farmer'}</p>
+                            </div>
+                            <span className="badge" style={{ background: 'var(--primary-light)', color: 'var(--primary)' }}>{o.status.toUpperCase()}</span>
+                        </div>
+                    ))}
+                </div>
+            ) : (
+                <p style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.85rem' }}>No orders ready for pickup.</p>
+            )}
+        </div>
+      </section>
 
-          <div className="card"
-            style={{ display: 'flex', alignItems: 'center', gap: '16px', cursor: 'pointer', padding: '16px', borderLeft: `5px solid ${stats.pending_verifications > 0 ? 'var(--primary)' : '#ddd'}` }}
-            onClick={() => navigate('/admin/users')}
-          >
-            <div style={{ width: '56px', height: '56px', background: '#E8F5E9', borderRadius: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-              <Users color="var(--primary)" size={28} />
-            </div>
-            <div style={{ flex: 1 }}>
-              <h3 style={{ fontSize: '1.05rem', fontWeight: '700' }}>User Verification</h3>
-              <p style={{ fontSize: '0.85rem', color: stats.pending_verifications > 0 ? 'var(--primary)' : 'var(--text-muted)', fontWeight: stats.pending_verifications > 0 ? '700' : '400' }}>
-                {stats.pending_verifications} User{stats.pending_verifications !== 1 ? 's' : ''} awaiting approval
-              </p>
-            </div>
-            <ChevronRight size={20} color="#ccc" />
+      {/* Active Deliveries */}
+      <section style={{ marginBottom: '24px' }}>
+        <h2 style={{ fontSize: '1.1rem', fontWeight: '700', marginBottom: '12px' }}>Active Deliveries</h2>
+        <div className="card" style={{ padding: activeDeliveries.length > 0 ? '12px' : '24px' }}>
+            {activeDeliveries.length > 0 ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                    {activeDeliveries.map(o => (
+                        <div key={o.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #f0f0f0', paddingBottom: '8px' }}>
+                            <div>
+                                <p style={{ fontSize: '0.85rem', fontWeight: '700' }}>#ORD-{o.id} • To {o.user?.name || 'Retailer'}</p>
+                                <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Status: On the way</p>
+                            </div>
+                            <span className="badge" style={{ background: '#E3F2FD', color: '#1976D2' }}>IN TRANSIT</span>
+                        </div>
+                    ))}
+                </div>
+            ) : (
+                <p style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.85rem' }}>No active deliveries.</p>
+            )}
+        </div>
+      </section>
+
+      {/* Navigation Hub */}
+      <section style={{ marginBottom: '24px' }}>
+        <h2 style={{ fontSize: '1.1rem', fontWeight: '800', marginBottom: '16px' }}>System Control</h2>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+          <div className="card" onClick={() => navigate('/admin/users')} style={{ cursor: 'pointer', textAlign: 'center' }}>
+            <Users size={24} color="var(--primary)" style={{ margin: '0 auto 8px' }} />
+            <p style={{ fontSize: '0.8rem', fontWeight: '700' }}>Verify Users</p>
           </div>
-
-          <div className="card"
-            style={{ display: 'flex', alignItems: 'center', gap: '16px', cursor: 'pointer', padding: '16px', borderLeft: '5px solid var(--primary)' }}
-            onClick={() => navigate('/admin/logs')}
-          >
-            <div style={{ width: '56px', height: '56px', background: '#E3F2FD', borderRadius: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-              <FileText color="#1976D2" size={28} />
-            </div>
-            <div style={{ flex: 1 }}>
-              <h3 style={{ fontSize: '1.05rem', fontWeight: '700' }}>Financial Audit Logs</h3>
-              <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-                Monitor payouts and payment alerts
-              </p>
-            </div>
-            <ChevronRight size={20} color="#ccc" />
+          <div className="card" onClick={() => navigate('/admin/logs')} style={{ cursor: 'pointer', textAlign: 'center' }}>
+            <FileText size={24} color="var(--accent)" style={{ margin: '0 auto 8px' }} />
+            <p style={{ fontSize: '0.8rem', fontWeight: '700' }}>Audit Logs</p>
           </div>
-
-          <div className="card"
-            style={{ display: 'flex', alignItems: 'center', gap: '16px', cursor: 'pointer', padding: '16px', borderLeft: '5px solid var(--accent)' }}
-          >
-            <div style={{ width: '56px', height: '56px', background: '#FFF3E0', borderRadius: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-              <Star color="#E65100" size={28} />
-            </div>
-            <div style={{ flex: 1 }}>
-              <h3 style={{ fontSize: '1.05rem', fontWeight: '700' }}>Reviews & Feedback</h3>
-              <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-                Monitor customer satisfaction
-              </p>
-            </div>
-            <ChevronRight size={20} color="#ccc" />
+          <div className="card" onClick={() => navigate('/admin/settings')} style={{ cursor: 'pointer', textAlign: 'center' }}>
+            <Star size={24} color="var(--warning)" style={{ margin: '0 auto 8px' }} />
+            <p style={{ fontSize: '0.8rem', fontWeight: '700' }}>Platform Settings</p>
+          </div>
+          <div className="card" onClick={() => navigate('/notifications')} style={{ cursor: 'pointer', textAlign: 'center' }}>
+            <Bell size={24} color="var(--danger)" style={{ margin: '0 auto 8px' }} />
+            <p style={{ fontSize: '0.8rem', fontWeight: '700' }}>Live Feed</p>
           </div>
         </div>
       </section>
