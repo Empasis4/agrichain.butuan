@@ -1,6 +1,6 @@
 import React from 'react';
 import axios from 'axios';
-import { LogOut, User, MapPin, Phone, Mail, Edit2 } from 'lucide-react';
+import { LogOut, User, MapPin, Phone, Mail, Edit2, FileText } from 'lucide-react';
 
 const Profile = ({ user, onLogout }) => {
   return (
