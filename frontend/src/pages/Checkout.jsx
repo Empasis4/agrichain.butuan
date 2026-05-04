@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { CreditCard, Truck, ChevronLeft, CheckCircle, Minus, Plus, ShoppingBag } from 'lucide-react';
+import { CreditCard, Truck, ChevronLeft, CheckCircle, Minus, Plus, ShoppingBag, MapPin } from 'lucide-react';
 import { useToast } from '../components/Toast';
 import axios from 'axios';
 
@@ -9,13 +9,57 @@ const Checkout = ({ user: userProp }) => {
   const location = useLocation();
   const { product, quantity: initialQty } = location.state || {};
   const user = userProp;
+  const mapRef = useRef(null);
+  const mapInstance = useRef(null);
 
   const [paymentMethod, setPaymentMethod] = useState('gcash');
   const [isProcessing, setIsProcessing] = useState(false);
   const [quantity, setQuantity] = useState(initialQty || 1);
-  const [deliveryAddress, setDeliveryAddress] = useState(user?.default_delivery_address || 'Butuan Fresh Market, North Montilla Blvd');
+  const [deliveryAddress, setDeliveryAddress] = useState(user?.default_delivery_address || user?.barangay || 'Butuan City');
+  const [paymentReference, setPaymentReference] = useState('');
+  const [paymentProof, setPaymentProof] = useState('');
 
-  // Redirect if no product
+  const shippingFee = 150;
+  const maxQty = parseFloat(product?.quantity_available) || 999;
+  const pricePerUnit = parseFloat(product?.price_per_kg) || 0;
+  const subtotal = pricePerUnit * quantity;
+  const total = subtotal + shippingFee;
+
+  const { showToast } = useToast();
+
+  useEffect(() => {
+    if (!product) return;
+
+    // Initialize Leaflet Map
+    if (window.L && !mapInstance.current) {
+        mapInstance.current = window.L.map('checkout-map').setView([8.9475, 125.5406], 13); // Center of Butuan
+        window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(mapInstance.current);
+
+        // Add markers
+        const farmerMarker = window.L.marker([8.95, 125.53]).addTo(mapInstance.current)
+            .bindPopup(`Farmer: ${product.farmer?.name || 'Local Farmer'}`).openPopup();
+        
+        const retailerMarker = window.L.marker([8.94, 125.55]).addTo(mapInstance.current)
+            .bindPopup('Your Delivery Location');
+
+        // Draw a simple line (simulated route)
+        const latlngs = [
+            [8.95, 125.53],
+            [8.94, 125.55]
+        ];
+        window.L.polyline(latlngs, {color: 'var(--primary)', weight: 4, dashArray: '10, 10'}).addTo(mapInstance.current);
+    }
+
+    return () => {
+        if (mapInstance.current) {
+            mapInstance.current.remove();
+            mapInstance.current = null;
+        }
+    };
+  }, [product]);
+
   if (!product) {
     return (
       <div style={{ textAlign: 'center', padding: '60px 20px' }}>
@@ -28,16 +72,6 @@ const Checkout = ({ user: userProp }) => {
     );
   }
 
-  const maxQty = parseFloat(product.quantity_available) || 999;
-  const pricePerUnit = parseFloat(product.price_per_kg) || 0;
-
-
-  const [paymentReference, setPaymentReference] = useState('');
-  const [paymentProof, setPaymentProof] = useState('');
-  const shippingFee = 150;
-  const subtotal = pricePerUnit * quantity;
-  const total = subtotal + shippingFee;
-
   const changeQty = (delta) => {
     setQuantity(prev => {
       const next = prev + delta;
@@ -46,8 +80,6 @@ const Checkout = ({ user: userProp }) => {
       return next;
     });
   };
-
-  const { showToast } = useToast();
 
   const handlePlaceOrder = async () => {
     if (!user?.id) { showToast('Please log in first.', 'error'); return; }
@@ -76,6 +108,7 @@ const Checkout = ({ user: userProp }) => {
       const res = await axios.post('/api/orders', orderData);
       const orderId = res.data.id;
 
+      // Notify Farmer
       await axios.post('/api/notifications', {
         user_id: product.farmer_id,
         title: '🛒 New Order Received!',
@@ -83,12 +116,23 @@ const Checkout = ({ user: userProp }) => {
         type: 'order'
       });
 
+      // Notify Admin
       await axios.post('/api/notifications', {
         user_id: 1,
         title: '📦 New Transaction Pending',
         message: `Order #${orderId} by ${user.name || 'Retailer'}. Total: ₱${total.toLocaleString()}. Payment: ${paymentMethod.toUpperCase()}.`,
         type: 'order'
       });
+
+      // Special notification if payment proof uploaded
+      if (paymentProof) {
+          await axios.post('/api/notifications', {
+            user_id: product.farmer_id,
+            title: '💳 Payment Uploaded',
+            message: `Retailer uploaded payment proof for Order #${orderId}. Please check for preparation.`,
+            type: 'order'
+          });
+      }
 
       navigate('/order-success', { state: { orderId: `ORD-${orderId}` } });
     } catch (error) {
@@ -171,11 +215,10 @@ const Checkout = ({ user: userProp }) => {
           type="text"
           value={deliveryAddress}
           onChange={e => setDeliveryAddress(e.target.value)}
+          placeholder="Enter detailed delivery address..."
           style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid #ddd', fontSize: '0.9rem', outline: 'none', marginBottom: '12px' }}
         />
-        <div style={{ width: '100%', height: '150px', background: '#e0e0e0', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#666', border: '1px solid #ccc', backgroundImage: 'url(https://maps.googleapis.com/maps/api/staticmap?center=Butuan+City&zoom=13&size=600x300&maptype=roadmap&markers=color:red%7CButuan+City)', backgroundSize: 'cover', backgroundPosition: 'center' }}>
-            {/* Simulated Live Map */}
-        </div>
+        <div id="checkout-map" style={{ width: '100%', height: '200px', borderRadius: '12px', border: '1px solid #ddd', zIndex: 0 }}></div>
       </section>
 
       {/* Payment Method */}
@@ -213,7 +256,31 @@ const Checkout = ({ user: userProp }) => {
                           Open GCash App
                       </a>
                       <input type="text" placeholder="Reference Number (Optional)" value={paymentReference} onChange={e => setPaymentReference(e.target.value)} style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #ddd', marginBottom: '8px', fontSize: '0.85rem' }} />
-                      <input type="text" placeholder="Upload Proof Image URL / Base64" value={paymentProof} onChange={e => setPaymentProof(e.target.value)} style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #ddd', fontSize: '0.85rem' }} />
+                      
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                          <label style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Upload Proof of Payment</label>
+                          <div 
+                            onClick={() => document.getElementById('payment-proof-upload').click()}
+                            style={{ width: '100%', height: '80px', border: '2px dashed #ddd', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', background: '#fcfcfc', overflow: 'hidden' }}
+                          >
+                            {paymentProof ? (
+                                <img src={paymentProof} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                            ) : (
+                                <span style={{ fontSize: '0.8rem', color: '#999' }}>Click to Upload Screenshot</span>
+                            )}
+                          </div>
+                          <input 
+                            id="payment-proof-upload" type="file" accept="image/*" hidden 
+                            onChange={(e) => {
+                                const file = e.target.files[0];
+                                if (file) {
+                                    const reader = new FileReader();
+                                    reader.onloadend = () => setPaymentProof(reader.result);
+                                    reader.readAsDataURL(file);
+                                }
+                            }}
+                          />
+                      </div>
                       <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '4px' }}>* Manual verification by Admin required</p>
                   </div>
               )}

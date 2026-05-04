@@ -136,8 +136,31 @@ const Profile = ({ user, onLogout }) => {
             {user.role === 'retailer' && (
                 <div style={{ marginBottom: '16px' }}>
                     <p style={{ fontSize: '0.85rem', fontWeight: '600', marginBottom: '8px' }}>Default Delivery Address</p>
-                    <input type="text" placeholder="Enter default address..." defaultValue={user.default_delivery_address || ''} style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #ddd', fontSize: '0.85rem' }} />
-                    <button className="btn btn-primary" style={{ marginTop: '8px', padding: '8px 16px', fontSize: '0.8rem' }}>Save Address</button>
+                    <input 
+                        id="default-address-input"
+                        type="text" 
+                        placeholder="Enter default address..." 
+                        defaultValue={user.default_delivery_address || ''} 
+                        style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #ddd', fontSize: '0.85rem' }} 
+                    />
+                    <button 
+                        className="btn btn-primary" 
+                        style={{ marginTop: '8px', padding: '8px 16px', fontSize: '0.8rem' }}
+                        onClick={async () => {
+                            const addr = document.getElementById('default-address-input').value;
+                            try {
+                                await axios.put(`/api/users/${user.id}`, { default_delivery_address: addr });
+                                const updatedUser = {...user, default_delivery_address: addr};
+                                localStorage.setItem('agrichain_user', JSON.stringify(updatedUser));
+                                alert('Delivery address updated successfully!');
+                                window.location.reload();
+                            } catch (err) {
+                                alert('Error updating address');
+                            }
+                        }}
+                    >
+                        Save Address
+                    </button>
                 </div>
             )}
 

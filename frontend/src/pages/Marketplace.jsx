@@ -36,26 +36,29 @@ const Marketplace = ({ user }) => {
   };
 
   const displayProducts = React.useMemo(() => {
-    if (!searchTerm && activeCategory === 'All') return filteredProducts;
+    let base = filteredProducts;
+    if (searchTerm) {
+        base = base.filter(product => {
+          const farmerName = typeof product.farmer === 'object' ? product.farmer?.name : product.farmer;
+          return product.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                 (farmerName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                 (product.location || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                 (product.barangay || '').toLowerCase().includes(searchTerm.toLowerCase());
+        });
+    }
     
-    return filteredProducts.filter(product => {
-      const farmerName = typeof product.farmer === 'object' ? product.farmer?.name : product.farmer;
-      const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                           (farmerName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           (product.location || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           (product.barangay || '').toLowerCase().includes(searchTerm.toLowerCase());
-      
-      let matchesCategory = activeCategory === 'All' || product.category === activeCategory;
-      
-      // Nearby Logic: Check if product barangay matches user's barangay
-      if (activeCategory === 'Nearby') {
-          const userBarangay = (user?.barangay || '').toLowerCase();
-          const productBarangay = (product.barangay || product.location || '').toLowerCase();
-          matchesCategory = userBarangay && productBarangay.includes(userBarangay);
-      }
-      
-      return matchesSearch && matchesCategory;
-    });
+    if (activeCategory === 'All') return base;
+    
+    if (activeCategory === 'Nearby') {
+        const userBarangay = (user?.barangay || '').toLowerCase().trim();
+        if (!userBarangay) return base; // If user hasn't set barangay, show all
+        return base.filter(product => {
+            const productBarangay = (product.barangay || product.location || '').toLowerCase();
+            return productBarangay.includes(userBarangay);
+        });
+    }
+
+    return base.filter(product => product.category === activeCategory);
   }, [searchTerm, activeCategory, filteredProducts, user?.barangay]);
 
   return (
@@ -161,9 +164,16 @@ const Marketplace = ({ user }) => {
                     </p>
                     <button 
                       onClick={(e) => { e.stopPropagation(); navigate(`/chat/${product.farmer_id || product.farmer?.id}`); }}
-                      style={{ background: 'var(--primary-light)', border: 'none', borderRadius: '50%', width: '28px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+                      style={{ 
+                        background: 'var(--primary-light)', border: 'none', borderRadius: '24px', 
+                        padding: '6px 12px', display: 'flex', alignItems: 'center', justifyContent: 'center', 
+                        gap: '6px', cursor: 'pointer', transition: 'all 0.2s ease' 
+                      }}
+                      onMouseOver={e => e.currentTarget.style.background = 'var(--primary)'}
+                      onMouseOut={e => e.currentTarget.style.background = 'var(--primary-light)'}
                     >
                       <Send size={14} color="var(--primary)" />
+                      <span style={{ fontSize: '0.75rem', fontWeight: '700', color: 'var(--primary)' }}>Chat Farmer</span>
                     </button>
                   </div>
                   <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '8px' }}>
