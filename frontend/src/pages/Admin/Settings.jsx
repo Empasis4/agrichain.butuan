@@ -77,6 +77,35 @@ const AdminSettings = ({ user }) => {
                 <span>Auto-assign nearest Rider</span>
                 <input type="checkbox" defaultChecked />
             </div>
+
+            <div style={{ marginTop: '24px', paddingTop: '24px', borderTop: '1px solid #eee' }}>
+                <h3 style={{ fontSize: '1rem', fontWeight: '700', marginBottom: '16px' }}>Add New Rider</h3>
+                <form 
+                    onSubmit={async (e) => {
+                        e.preventDefault();
+                        const data = {
+                            name: e.target.name.value,
+                            email: e.target.email.value,
+                            phone: e.target.phone.value,
+                            password: e.target.password.value
+                        };
+                        try {
+                            await axios.post('/api/admin/riders', data);
+                            alert('Rider account created successfully!');
+                            e.target.reset();
+                        } catch (err) {
+                            alert(err.response?.data?.message || 'Error creating rider');
+                        }
+                    }}
+                    style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}
+                >
+                    <input type="text" name="name" placeholder="Rider Name" required className="input" />
+                    <input type="email" name="email" placeholder="Rider Email" required className="input" />
+                    <input type="tel" name="phone" placeholder="Phone Number" className="input" />
+                    <input type="password" name="password" placeholder="Temporary Password" required className="input" />
+                    <button type="submit" className="btn btn-primary">Create Rider Account</button>
+                </form>
+            </div>
           </div>
         )}
       </div>

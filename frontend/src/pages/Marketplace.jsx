@@ -42,11 +42,21 @@ const Marketplace = ({ user }) => {
       const farmerName = typeof product.farmer === 'object' ? product.farmer?.name : product.farmer;
       const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
                            (farmerName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           (product.location || '').toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesCategory = activeCategory === 'All' || activeCategory === 'Nearby' || product.category === activeCategory;
+                           (product.location || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           (product.barangay || '').toLowerCase().includes(searchTerm.toLowerCase());
+      
+      let matchesCategory = activeCategory === 'All' || product.category === activeCategory;
+      
+      // Nearby Logic: Check if product barangay matches user's barangay
+      if (activeCategory === 'Nearby') {
+          const userBarangay = (user?.barangay || '').toLowerCase();
+          const productBarangay = (product.barangay || product.location || '').toLowerCase();
+          matchesCategory = userBarangay && productBarangay.includes(userBarangay);
+      }
+      
       return matchesSearch && matchesCategory;
     });
-  }, [searchTerm, activeCategory, filteredProducts]);
+  }, [searchTerm, activeCategory, filteredProducts, user?.barangay]);
 
   return (
     <div className="marketplace">
@@ -171,18 +181,41 @@ const Marketplace = ({ user }) => {
                 </div>
             </div>
             {selectedProduct?.id === product.id && (
-                <div style={{ marginTop: '12px', paddingTop: '12px', borderTop: '1px solid #eee', animation: 'slideUp 0.3s ease' }}>
-                    <p style={{ fontSize: '0.85rem', color: 'var(--text-main)', marginBottom: '12px' }}>{product.description || 'Freshly harvested produce from our local farms.'}</p>
+                <div style={{ 
+                    marginTop: '12px', paddingTop: '12px', borderTop: '1px solid #eee', 
+                    animation: 'slideUp 0.3s ease', display: 'flex', flexDirection: 'column', gap: '12px' 
+                }}>
+                    <p style={{ fontSize: '0.85rem', color: 'var(--text-main)' }}>
+                        {product.description || 'Freshly harvested produce from our local farms.'}
+                    </p>
                     <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '8px' }}>
-                        {(product.image_path?.includes('[') ? JSON.parse(product.image_path) : (product.image_path ? [product.image_path] : [])).map((img, i) => (
-                            <img key={i} src={img} style={{ width: '80px', height: '80px', borderRadius: '8px', objectFit: 'cover', flexShrink: 0 }} />
-                        ))}
+                        {(() => {
+                            let imgs = [];
+                            try {
+                                if (product.image_path) {
+                                    imgs = product.image_path.startsWith('[') ? JSON.parse(product.image_path) : [product.image_path];
+                                }
+                            } catch (e) { imgs = [product.image_path]; }
+                            return imgs.map((img, i) => (
+                                <img 
+                                    key={i} src={img} 
+                                    style={{ width: '120px', height: '120px', borderRadius: '8px', objectFit: 'cover', flexShrink: 0, border: '1px solid #eee' }} 
+                                />
+                            ));
+                        })()}
                     </div>
-                    <div style={{ background: '#f9f9f9', padding: '12px', borderRadius: '8px', marginTop: '12px' }}>
-                        <p style={{ fontSize: '0.8rem', fontWeight: '700', marginBottom: '4px' }}>Feedback & Reviews</p>
+                    <div style={{ background: '#f9f9f9', padding: '12px', borderRadius: '8px' }}>
+                        <p style={{ fontSize: '0.8rem', fontWeight: '700', marginBottom: '4px' }}>Farmer Feedback</p>
                         <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>"Very fresh and fast delivery! Highly recommended." - ⭐⭐⭐⭐⭐</p>
-                        <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '4px' }}>"Great quality vegetables." - ⭐⭐⭐⭐⭐</p>
                     </div>
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); navigate('/checkout', { state: { product: { ...product, farmer_id: product.farmer_id || product.farmer?.id } } }); }}
+                      className="btn btn-primary" 
+                      style={{ width: '100%', padding: '12px' }}
+                      disabled={parseFloat(product.quantity_available) <= 0}
+                    >
+                      Confirm Selection & Checkout
+                    </button>
                 </div>
             )}
           </div>

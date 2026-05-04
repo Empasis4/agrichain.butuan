@@ -35,6 +35,7 @@ const AdminDashboard = ({ user }) => {
   };
 
   const fetchNotifications = async () => {
+    if (!user?.id) return;
     try {
       const res = await axios.get(`/api/notifications?user_id=${user.id}`);
       setNotifications(Array.isArray(res.data) ? res.data.slice(0, 5) : []);

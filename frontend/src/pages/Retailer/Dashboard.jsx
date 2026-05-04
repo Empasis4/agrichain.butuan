@@ -99,8 +99,20 @@ const RetailerDashboard = ({ user }) => {
                         try { imgs = JSON.parse(p.image_path || '[]'); } catch(e) { imgs = p.image_path ? [p.image_path] : []; }
                         return (
                             <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: '12px', borderBottom: '1px solid #f0f0f0', paddingBottom: '8px' }}>
-                                <div style={{ width: '50px', height: '50px', borderRadius: '8px', overflow: 'hidden', flexShrink: 0, background: '#eee' }}>
-                                    <img src={imgs[0]} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                <div style={{ width: '50px', height: '50px', borderRadius: '8px', overflow: 'hidden', flexShrink: 0, background: '#eee', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                    {(() => {
+                                        let imgs = [];
+                                        try {
+                                          if (p.image_path) {
+                                            imgs = p.image_path.startsWith('[') ? JSON.parse(p.image_path) : [p.image_path];
+                                          }
+                                        } catch (e) { imgs = [p.image_path]; }
+                                        
+                                        if (imgs.length > 0 && imgs[0]) {
+                                          return <img src={imgs[0]} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />;
+                                        }
+                                        return p.name.includes('Onion') ? '🧅' : p.name.includes('Banana') ? '🍌' : '🥦';
+                                    })()}
                                 </div>
                                 <div style={{ flex: 1 }}>
                                     <p style={{ fontSize: '0.9rem', fontWeight: '700' }}>{p.name}</p>

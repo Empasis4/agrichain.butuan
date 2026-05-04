@@ -59,4 +59,24 @@ class UserController extends Controller
         $user->delete();
         return response()->json(['message' => 'User deleted successfully']);
     }
+    public function storeRider(Request $request)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string',
+            'email' => 'required|email|unique:users',
+            'password' => 'required|min:6',
+            'phone' => 'nullable|string'
+        ]);
+
+        $user = User::create([
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'password' => \Illuminate\Support\Facades\Hash::make($validated['password']),
+            'role' => 'rider',
+            'status' => 'verified',
+            'phone' => $validated['phone']
+        ]);
+
+        return response()->json(['message' => 'Rider account created successfully', 'user' => $user], 201);
+    }
 }

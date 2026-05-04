@@ -27,9 +27,12 @@ Route::get('/health', function () {
     }
 });
 
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
+Route::get('/user', function (Request $request) {
+    if (!$request->user()) {
+        return response()->json(['message' => 'Unauthenticated'], 401);
+    }
     return $request->user();
-});
+})->middleware('auth:sanctum');
 
 Route::get('products/farmer/{farmer_id}', [\App\Http\Controllers\ProductController::class, 'getFarmerProducts']);
 Route::get('orders/farmer/{id}', [\App\Http\Controllers\OrderController::class, 'getFarmerOrders']);
@@ -43,6 +46,7 @@ Route::apiResource('orders', \App\Http\Controllers\OrderController::class);
 Route::get('admin/pending-users', [\App\Http\Controllers\UserController::class, 'getPendingUsers']);
 Route::post('admin/verify-user/{id}', [\App\Http\Controllers\UserController::class, 'verifyUser']);
 Route::get('admin/stats', [\App\Http\Controllers\UserController::class, 'getAdminStats']);
+Route::post('admin/riders', [\App\Http\Controllers\UserController::class, 'storeRider']);
 Route::put('users/{id}', [\App\Http\Controllers\UserController::class, 'updateProfile']);
 Route::get('admin/orders', [\App\Http\Controllers\OrderController::class, 'index']); // Get all orders for admin
 
