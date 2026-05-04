@@ -15,6 +15,24 @@ const Register = ({ onRegister }) => {
     password: ''
   });
 
+  const [barangaySearch, setBarangaySearch] = useState('');
+  const [showBarangayOptions, setShowBarangayOptions] = useState(false);
+
+  const barangays = [
+    "Agusan Pequeño", "Amago", "Ampayon", "Anticala", "Baan KM 3", "Baan Proper", "Babag", "Bading", 
+    "Bancasi", "Banza", "Baobaoan", "Basag", "Bayanihan", "Bilay", "Bit-os", "Bitan-agan", "Bobon", 
+    "Bonbon", "Bugabus", "Buhangin", "Butuan City Proper", "Cabcabon", "Camayahan", "Dagohoy", 
+    "Dankias", "De Oro", "Diego Silang", "Doongan", "Dulag", "Dumalagan", "Florida", "Golden Ribbon", 
+    "Holy Redeemer", "Humabon", "Imadejas", "J.P. Rizal", "Kinamlutan", "Lapu-Lapu", "Lemon", 
+    "Leon Kilat", "Libertad", "Limaha", "Los Angeles", "Lumbocan", "Maguinda", "Mahay", "Maibu", 
+    "Mandamo", "Manila de Oro", "Maon", "Masao", "Maug", "Obrero", "Ong Yiu", "Pagatpatan", 
+    "Pangabugan", "Pantalan", "Pigdaulan", "Pinamanculan", "Port Poyohon", "Quezon", "Rajah Soliman", 
+    "San Ignacio", "San Jose", "San Vicente", "Santa Cruz", "Santa Lucia", "Santo Niño", "Sikatuna", 
+    "Siluman", "Tagabaca", "Taguibo", "Taligaman", "Tiniwisan", "Tungao", "Urduja", "Villa Kananga"
+  ];
+
+  const filteredBarangays = barangays.filter(b => b.toLowerCase().includes(barangaySearch.toLowerCase()));
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -86,14 +104,49 @@ const Register = ({ onRegister }) => {
           onChange={(e) => setFormData({...formData, phone: e.target.value})}
           style={{ width: '100%', padding: '14px 16px', borderRadius: '12px', border: '1px solid #ddd', outline: 'none' }}
         />
-        <input 
-          type="text" 
-          placeholder="Barangay (Type your barangay)" 
-          required
-          value={formData.barangay || ''}
-          onChange={(e) => setFormData({...formData, barangay: e.target.value})}
-          style={{ width: '100%', padding: '14px 16px', borderRadius: '12px', border: '1px solid #ddd', outline: 'none' }}
-        />
+        <div style={{ position: 'relative' }}>
+          <input 
+            type="text" 
+            placeholder="Search Barangay (Butuan City)" 
+            required
+            value={barangaySearch}
+            onChange={(e) => {
+              setBarangaySearch(e.target.value);
+              setShowBarangayOptions(true);
+            }}
+            onFocus={() => setShowBarangayOptions(true)}
+            style={{ width: '100%', padding: '14px 16px', borderRadius: '12px', border: '1px solid #ddd', outline: 'none' }}
+          />
+          {showBarangayOptions && barangaySearch && (
+            <div style={{ 
+              position: 'absolute', top: '100%', left: '0', width: '100%', zIndex: 100, 
+              background: '#fff', border: '1px solid #ddd', borderRadius: '8px', 
+              boxShadow: 'var(--shadow-lg)', maxHeight: '200px', overflowY: 'auto' 
+            }}>
+              {filteredBarangays.map(b => (
+                <div 
+                  key={b} 
+                  onClick={() => {
+                    setBarangaySearch(b);
+                    setFormData({...formData, barangay: b});
+                    setShowBarangayOptions(false);
+                  }}
+                  style={{ padding: '12px 16px', borderBottom: '1px solid #eee', cursor: 'pointer', fontSize: '0.9rem' }}
+                >
+                  {b}
+                </div>
+              ))}
+              {filteredBarangays.length === 0 && (
+                <div style={{ padding: '12px 16px', color: '#999', fontSize: '0.85rem' }}>No barangay found. You can still type yours manually.</div>
+              )}
+            </div>
+          )}
+          {formData.barangay && (
+            <p style={{ fontSize: '0.75rem', color: 'var(--primary)', marginTop: '4px', fontWeight: '700' }}>
+               📍 Selected: {formData.barangay}, Butuan City
+            </p>
+          )}
+        </div>
         <input 
           type="text" 
           placeholder={role === 'farmer' ? "Farmer RSBSA / ID Number" : "DTI / Business Permit Number"} 

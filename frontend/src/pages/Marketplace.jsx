@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Search, Filter, MapPin, ShoppingBag, X } from 'lucide-react';
+import { Search, Filter, MapPin, ShoppingBag, X, Send } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const Marketplace = ({ user }) => {
@@ -10,6 +10,7 @@ const Marketplace = ({ user }) => {
   const [showFilters, setShowFilters] = useState(false);
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [selectedProduct, setSelectedProduct] = useState(null);
 
   useEffect(() => {
     fetchMarketplace();
@@ -118,11 +119,19 @@ const Marketplace = ({ user }) => {
                   boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.05)',
                   overflow: 'hidden'
                 }}>
-                  {product.image_path ? (
-                    <img src={product.image_path.includes('[') ? JSON.parse(product.image_path)[0] : product.image_path} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                  ) : (
-                    (product.name || '').includes('Onion') ? '🧅' : (product.name || '').includes('Banana') ? '🍌' : (product.name || '').includes('Tomato') ? '🍅' : (product.name || '').includes('Sweet') ? '🌽' : '🍆'
-                  )}
+                  {(() => {
+                    let imgs = [];
+                    try {
+                      if (product.image_path) {
+                        imgs = product.image_path.startsWith('[') ? JSON.parse(product.image_path) : [product.image_path];
+                      }
+                    } catch (e) { imgs = [product.image_path]; }
+                    
+                    if (imgs.length > 0 && imgs[0]) {
+                      return <img src={imgs[0]} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />;
+                    }
+                    return (product.name || '').includes('Onion') ? '🧅' : (product.name || '').includes('Banana') ? '🍌' : (product.name || '').includes('Tomato') ? '🍅' : (product.name || '').includes('Sweet') ? '🌽' : '🍆';
+                  })()}
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '4px' }}>
