@@ -139,15 +139,21 @@ class OrderController extends Controller
         ]);
 
         // Create notification for the farmer(s)
-        $order->load('items.product');
-        $farmerIds = $order->items->pluck('product.farmer_id')->unique();
-        foreach ($farmerIds as $farmerId) {
-            \App\Models\Notification::create([
-                'user_id' => $farmerId,
-                'title' => '📦 Prepare for Shipment',
-                'message' => "Order ORD-{$order->id} is now PAID. Please prepare the items for the rider.",
-                'type' => 'order'
-              ]);
+        $order->load(['items.product.farmer']);
+        
+        if ($order->items) {
+            $farmerIds = $order->items->map(function($item) {
+                return $item->product ? $item->product->farmer_id : null;
+            })->filter()->unique();
+
+            foreach ($farmerIds as $farmerId) {
+                \App\Models\Notification::create([
+                    'user_id' => $farmerId,
+                    'title' => '📦 Prepare for Shipment',
+                    'message' => "Order ORD-{$order->id} is now PAID. Please prepare the items for the rider.",
+                    'type' => 'order'
+                ]);
+            }
         }
         
         return response()->json([

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Check, X, Search, ShieldCheck } from 'lucide-react';
 import axios from 'axios';
+import { useToast } from '../../components/Toast';
 
 const TransactionVerification = () => {
   const [pendingTransactions, setPendingTransactions] = useState([]);
@@ -23,13 +24,17 @@ const TransactionVerification = () => {
     }
   };
 
+  const { showToast } = useToast();
+
   const handleVerify = async (id) => {
     try {
       await axios.post(`/api/orders/${id}/verify-payment`);
       setPendingTransactions(prev => prev.filter(t => t.id !== id));
-      alert('Payment Verified Successfully!');
+      showToast('Payment Verified Successfully!', 'success');
+      if (selectedTxn) setSelectedTxn(null);
     } catch (error) {
-      alert('Error verifying payment');
+      console.error('Verification error:', error);
+      showToast('Error verifying payment. Please try again.', 'error');
     }
   };
 
