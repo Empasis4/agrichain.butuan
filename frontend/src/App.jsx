@@ -19,6 +19,7 @@ import OrderDetail from './pages/Retailer/OrderDetail';
 import OrderTracking from './pages/Retailer/OrderTracking';
 import Notifications from './pages/Notifications';
 import Profile from './pages/Profile';
+import { useToast } from './components/Toast';
 import './index.css';
 
 import FarmerOrders from './pages/Farmer/Orders';
@@ -26,8 +27,6 @@ import FarmerOrders from './pages/Farmer/Orders';
 // Since Laravel is now serving the frontend directly, they share the exact same domain.
 // Axios will naturally use the current domain, so no baseURL config is needed!
 axios.defaults.baseURL = '';
-
-import { ToastProvider } from './components/Toast';
 
 function App() {
   const [user, setUser] = React.useState(() => {
