@@ -23,6 +23,7 @@ import { useToast } from './components/Toast';
 import './index.css';
 
 import FarmerOrders from './pages/Farmer/Orders';
+import AdminOrders from './pages/Admin/Orders';
 
 // Since Laravel is now serving the frontend directly, they share the exact same domain.
 // Axios will naturally use the current domain, so no baseURL config is needed!
@@ -109,7 +110,11 @@ function App() {
                 <Route path="/marketplace" element={<Marketplace user={user} />} />
                 <Route path="/checkout" element={<Checkout user={user} />} />
                 <Route path="/order-success" element={<OrderSuccess />} />
-                <Route path="/orders" element={user.role === 'farmer' ? <FarmerOrders user={user} /> : <RetailerOrders user={user} />} />
+                <Route path="/orders" element={
+                  user.role === 'admin' ? <AdminOrders user={user} /> : 
+                  user.role === 'farmer' ? <FarmerOrders user={user} /> : 
+                  <RetailerOrders user={user} />
+                } />
                 <Route path="/orders/:id" element={<OrderDetail user={user} />} />
                 <Route path="/orders/:id/track" element={<OrderTracking user={user} />} />
                 <Route path="/notifications" element={<Notifications user={user} />} />

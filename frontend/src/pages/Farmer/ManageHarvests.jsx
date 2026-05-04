@@ -129,10 +129,40 @@ const ManageHarvests = ({ user }) => {
               type="number" placeholder="Available Quantity" required className="input" 
               value={newProduct.quantity_available} onChange={e => setNewProduct({...newProduct, quantity_available: e.target.value})}
             />
-            <input 
-              type="text" placeholder="Product Image URL (e.g. https://...)" className="input" 
-              value={newProduct.image_path} onChange={e => setNewProduct({...newProduct, image_path: e.target.value})}
-            />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <label style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-muted)' }}>Product Photo</label>
+              <div 
+                onClick={() => document.getElementById('product-image-upload').click()}
+                style={{ 
+                  width: '100%', height: '120px', border: '2px dashed #ddd', borderRadius: '12px', 
+                  display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', 
+                  cursor: 'pointer', overflow: 'hidden', position: 'relative', background: '#fcfcfc'
+                }}
+              >
+                {newProduct.image_path ? (
+                  <div style={{ width: '100%', height: '100%', position: 'relative' }}>
+                    <img src={newProduct.image_path} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    <div style={{ position: 'absolute', bottom: '8px', right: '8px', background: 'rgba(0,0,0,0.5)', color: '#fff', padding: '4px 8px', borderRadius: '4px', fontSize: '0.7rem' }}>Change Photo</div>
+                  </div>
+                ) : (
+                  <>
+                    <Plus size={32} color="#aaa" />
+                    <span style={{ fontSize: '0.8rem', color: '#aaa', marginTop: '8px' }}>Click to attach photo</span>
+                  </>
+                )}
+                <input 
+                  id="product-image-upload" type="file" accept="image/*" hidden 
+                  onChange={(e) => {
+                    const file = e.target.files[0];
+                    if (file) {
+                      const reader = new FileReader();
+                      reader.onloadend = () => setNewProduct({...newProduct, image_path: reader.result});
+                      reader.readAsDataURL(file);
+                    }
+                  }}
+                />
+              </div>
+            </div>
             <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
               <button type="button" onClick={() => setShowAddForm(false)} className="btn" style={{ flex: 1, background: '#eee', color: 'var(--text-main)' }}>Cancel</button>
               <button type="submit" className="btn btn-primary" style={{ flex: 2 }}>{editingId ? 'Update Harvest' : 'Publish Harvest'}</button>

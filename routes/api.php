@@ -44,5 +44,6 @@ Route::get('admin/pending-users', [\App\Http\Controllers\UserController::class, 
 Route::post('admin/verify-user/{id}', [\App\Http\Controllers\UserController::class, 'verifyUser']);
 Route::get('admin/stats', [\App\Http\Controllers\UserController::class, 'getAdminStats']);
 Route::put('users/{id}', [\App\Http\Controllers\UserController::class, 'updateProfile']);
+Route::get('admin/orders', [\App\Http\Controllers\OrderController::class, 'index']); // Get all orders for admin
 
 Route::apiResource('notifications', \App\Http\Controllers\NotificationController::class);

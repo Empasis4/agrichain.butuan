@@ -1,8 +1,10 @@
 import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { CheckCircle, ArrowRight, Share2, Download } from 'lucide-react';
+import { useToast } from '../components/Toast';
 
 const OrderSuccess = () => {
+  const { showToast } = useToast();
   const location = useLocation();
   const navigate = useNavigate();
   const orderId = location.state?.orderId || 'ORD-UNKNOWN';
@@ -36,10 +38,28 @@ const OrderSuccess = () => {
         </button>
         
         <div style={{ display: 'flex', gap: '12px' }}>
-          <button className="btn" style={{ flex: 1, background: '#fff', border: '1px solid #ddd' }}>
+          <button 
+            className="btn" 
+            onClick={() => window.print()}
+            style={{ flex: 1, background: '#fff', border: '1px solid #ddd', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+          >
             <Download size={18} /> Receipt
           </button>
-          <button className="btn" style={{ flex: 1, background: '#fff', border: '1px solid #ddd' }}>
+          <button 
+            className="btn" 
+            onClick={() => {
+              if (navigator.share) {
+                navigator.share({
+                  title: 'AgriChain Order Receipt',
+                  text: `I just placed an order on AgriChain Butuan! Order ID: ${orderId}`,
+                  url: window.location.href
+                }).catch(console.error);
+              } else {
+                showToast('Sharing not supported on this browser', 'info');
+              }
+            }}
+            style={{ flex: 1, background: '#fff', border: '1px solid #ddd', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+          >
             <Share2 size={18} /> Share
           </button>
         </div>
