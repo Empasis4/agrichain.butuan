@@ -70,23 +70,7 @@ const RetailerDashboard = ({ user }) => {
         </div>
       </div>
 
-      {/* Categories Horizontal Scroll */}
-      <div style={{ display: 'flex', gap: '10px', overflowX: 'auto', paddingBottom: '16px', scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-        {['All Products', 'Vegetables', 'Fruits', 'Root Crops', 'Livestock'].map((cat, i) => (
-          <div 
-            key={i} 
-            onClick={() => navigate('/marketplace')}
-            style={{ 
-              padding: '10px 20px', background: i === 0 ? 'var(--primary)' : '#fff', 
-              color: i === 0 ? '#fff' : 'var(--text-muted)', borderRadius: '24px',
-              whiteSpace: 'nowrap', fontSize: '0.85rem', fontWeight: '700',
-              boxShadow: 'var(--shadow-sm)', border: '1px solid #eee', cursor: 'pointer'
-            }}
-          >
-            {cat}
-          </div>
-        ))}
-      </div>
+
 
       {/* Market Price Hub */}
       <section style={{ marginBottom: '24px' }}>

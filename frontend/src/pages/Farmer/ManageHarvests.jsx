@@ -119,6 +119,19 @@ const ManageHarvests = ({ user }) => {
               type="text" placeholder="Product Name (e.g. Red Onions)" required className="input" 
               value={newProduct.name} onChange={e => setNewProduct({...newProduct, name: e.target.value})}
             />
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <label style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: '600', paddingLeft: '4px' }}>Crop Category</label>
+                <select 
+                    className="input" required
+                    value={newProduct.category} onChange={e => setNewProduct({...newProduct, category: e.target.value})}
+                >
+                    <option value="Vegetables">Vegetables</option>
+                    <option value="Fruits">Fruits</option>
+                    <option value="Root Crops">Root Crops</option>
+                </select>
+            </div>
+
             <div style={{ display: 'flex', gap: '8px' }}>
               <input 
                 type="number" placeholder="Price" required className="input" 
@@ -134,9 +147,18 @@ const ManageHarvests = ({ user }) => {
                 <option value="sack">sack</option>
               </select>
             </div>
+            
             <input 
               type="number" placeholder="Available Quantity" required className="input" 
               value={newProduct.quantity_available} onChange={e => setNewProduct({...newProduct, quantity_available: e.target.value})}
+            />
+
+            <textarea 
+                placeholder="Product Details (e.g. Organic, Freshly Picked, etc.)" 
+                className="input" 
+                value={newProduct.description} 
+                onChange={e => setNewProduct({...newProduct, description: e.target.value})}
+                style={{ minHeight: '80px', resize: 'vertical' }}
             />
             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                 <label style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: '600', paddingLeft: '4px' }}>Harvest Date</label>
@@ -158,27 +180,29 @@ const ManageHarvests = ({ user }) => {
               <label style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-muted)' }}>Product Photos (3 to 5 images required)</label>
               <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '8px' }}>
                   {(Array.isArray(newProduct.image_path) ? newProduct.image_path : (newProduct.image_path ? [newProduct.image_path] : [])).map((img, idx) => (
-                    <div key={idx} style={{ width: '80px', height: '80px', borderRadius: '8px', overflow: 'hidden', position: 'relative', flexShrink: 0 }}>
+                    <div key={idx} style={{ position: 'relative', width: '80px', height: '80px', flexShrink: 0, borderRadius: '8px', overflow: 'hidden', border: '1px solid #eee' }}>
                         <img src={img} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                        <button type="button" onClick={() => {
-                            const newArr = (Array.isArray(newProduct.image_path) ? [...newProduct.image_path] : [newProduct.image_path]).filter((_, i) => i !== idx);
-                            setNewProduct({...newProduct, image_path: newArr});
-                        }} style={{ position: 'absolute', top: '2px', right: '2px', background: 'rgba(255,0,0,0.7)', color: 'white', border: 'none', borderRadius: '50%', width: '20px', height: '20px', fontSize: '12px', cursor: 'pointer' }}>×</button>
+                        <button 
+                            type="button"
+                            onClick={() => {
+                                const newImgs = [...(Array.isArray(newProduct.image_path) ? newProduct.image_path : [newProduct.image_path])];
+                                newImgs.splice(idx, 1);
+                                setNewProduct({...newProduct, image_path: newImgs});
+                            }}
+                            style={{ position: 'absolute', top: '2px', right: '2px', background: 'rgba(0,0,0,0.5)', color: '#fff', border: 'none', borderRadius: '50%', width: '18px', height: '18px', fontSize: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+                        >
+                            ×
+                        </button>
                     </div>
-                  ))}
-                  
-                  {(!Array.isArray(newProduct.image_path) || newProduct.image_path.length < 5) && (
-                      <div 
+                ))}
+                {(Array.isArray(newProduct.image_path) ? newProduct.image_path : (newProduct.image_path ? [newProduct.image_path] : [])).length < 5 && (
+                    <div 
                         onClick={() => document.getElementById('product-image-upload').click()}
-                        style={{ 
-                          width: '80px', height: '80px', border: '2px dashed #ddd', borderRadius: '8px', 
-                          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', 
-                          cursor: 'pointer', background: '#fcfcfc', flexShrink: 0
-                        }}
-                      >
+                        style={{ width: '80px', height: '80px', flexShrink: 0, border: '2px dashed #ddd', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', background: '#fcfcfc' }}
+                    >
                         <Plus size={24} color="#aaa" />
-                      </div>
-                  )}
+                    </div>
+                )}
               </div>
               <input 
                   id="product-image-upload" type="file" accept="image/*" multiple hidden 
