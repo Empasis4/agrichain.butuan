@@ -8,11 +8,13 @@ const RetailerDashboard = ({ user }) => {
 
   const [isExpanded, setIsExpanded] = React.useState(true);
   const [stats, setStats] = React.useState({ active_orders: 0 });
+  const [trending, setTrending] = React.useState([]);
+  const [recent, setRecent] = React.useState([]);
 
   React.useEffect(() => {
     if (!user?.id) return;
-    fetchRetailerStats();
-    const pollInterval = setInterval(fetchRetailerStats, 8000);
+    fetchData();
+    const pollInterval = setInterval(fetchData, 10000);
     const handleScroll = () => {
       setIsExpanded(window.scrollY <= 50);
     };
@@ -23,21 +25,27 @@ const RetailerDashboard = ({ user }) => {
     };
   }, [user?.id]);
 
-  const fetchRetailerStats = async () => {
+  const fetchData = async () => {
     if (!user?.id) return;
     try {
-      const res = await axios.get(`/api/orders/retailer/${user.id}`);
-      const active = res.data.filter(o => o.status !== 'delivered' && o.status !== 'cancelled').length;
-      const totalSourced = res.data
+      // Fetch Orders
+      const orderRes = await axios.get(`/api/orders/retailer/${user.id}`);
+      const active = orderRes.data.filter(o => o.status !== 'delivered' && o.status !== 'cancelled').length;
+      const totalSourced = orderRes.data
         .filter(o => o.status !== 'cancelled')
         .reduce((sum, o) => sum + parseFloat(o.total_price || 0), 0);
       setStats({ 
         active_orders: active, 
         total_sourced: totalSourced,
-        total_orders: res.data.length
+        total_orders: orderRes.data.length
       });
+      setRecent(orderRes.data.slice(0, 3));
+
+      // Fetch Trending Products
+      const productRes = await axios.get('/api/products');
+      setTrending(Array.isArray(productRes.data) ? productRes.data.slice(0, 5) : []);
     } catch (err) {
-      console.error('Retailer stats error:', err);
+      console.error('Retailer data fetch error:', err);
     }
   };
 
@@ -76,15 +84,40 @@ const RetailerDashboard = ({ user }) => {
       <section style={{ marginBottom: '24px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
           <h2 style={{ fontSize: '1.1rem', fontWeight: '700' }}>Market Price Hub</h2>
-          <span style={{ fontSize: '0.8rem', color: 'var(--primary)', fontWeight: '600' }}>View All</span>
+          <span style={{ fontSize: '0.8rem', color: 'var(--primary)', fontWeight: '600', cursor: 'pointer' }} onClick={() => navigate('/marketplace')}>View All</span>
         </div>
         <div className="card" style={{ padding: '0', overflow: 'hidden' }}>
           <div style={{ padding: '16px', background: 'var(--primary-light)', display: 'flex', justifyContent: 'space-between' }}>
             <span style={{ fontWeight: '700', fontSize: '0.9rem' }}>Trending Crops</span>
             <span style={{ fontSize: '0.75rem', color: 'var(--primary)' }}>Live Updates</span>
           </div>
-          <div style={{ padding: '30px', textAlign: 'center', color: 'var(--text-muted)' }}>
-            <p style={{ fontSize: '0.85rem' }}>Listing is empty. Waiting for Farmer harvests...</p>
+          <div style={{ padding: '12px' }}>
+            {trending.length > 0 ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    {trending.map(p => {
+                        let imgs = [];
+                        try { imgs = JSON.parse(p.image_path || '[]'); } catch(e) { imgs = p.image_path ? [p.image_path] : []; }
+                        return (
+                            <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: '12px', borderBottom: '1px solid #f0f0f0', paddingBottom: '8px' }}>
+                                <div style={{ width: '50px', height: '50px', borderRadius: '8px', overflow: 'hidden', flexShrink: 0, background: '#eee' }}>
+                                    <img src={imgs[0]} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                </div>
+                                <div style={{ flex: 1 }}>
+                                    <p style={{ fontSize: '0.9rem', fontWeight: '700' }}>{p.name}</p>
+                                    <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{p.farmer?.name || 'Farmer'} • {p.category}</p>
+                                </div>
+                                <div style={{ textAlign: 'right' }}>
+                                    <p style={{ fontSize: '0.9rem', fontWeight: '800', color: 'var(--primary)' }}>₱{p.price_per_kg}/{p.unit}</p>
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+            ) : (
+                <div style={{ padding: '20px', textAlign: 'center', color: 'var(--text-muted)' }}>
+                    <p style={{ fontSize: '0.85rem' }}>Listing is empty. Waiting for Farmer harvests...</p>
+                </div>
+            )}
           </div>
         </div>
       </section>
@@ -111,12 +144,33 @@ const RetailerDashboard = ({ user }) => {
       <section style={{ marginBottom: '24px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
           <h2 style={{ fontSize: '1.1rem', fontWeight: '700' }}>Recent Purchases</h2>
-          <ChevronRight size={20} color="var(--text-muted)" onClick={() => navigate('/orders')} />
+          <ChevronRight size={20} color="var(--text-muted)" onClick={() => navigate('/orders')} style={{ cursor: 'pointer' }} />
         </div>
-        <div className="card" style={{ textAlign: 'center', padding: '30px', color: 'var(--text-muted)' }}>
-          <ShoppingCart size={40} style={{ opacity: 0.2, marginBottom: '12px' }} />
-          <p style={{ fontSize: '0.85rem' }}>No recent purchases. Start sourcing today!</p>
-          <button onClick={() => navigate('/marketplace')} className="btn btn-primary" style={{ marginTop: '12px', padding: '8px 16px', fontSize: '0.8rem' }}>Marketplace</button>
+        <div className="card" style={{ padding: recent.length > 0 ? '12px' : '30px' }}>
+            {recent.length > 0 ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    {recent.map(o => (
+                        <div key={o.id} style={{ display: 'flex', alignItems: 'center', gap: '12px', borderBottom: '1px solid #f0f0f0', paddingBottom: '8px' }} onClick={() => navigate('/orders')}>
+                            <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#E8F5E9', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                <Package size={20} color="var(--primary)" />
+                            </div>
+                            <div style={{ flex: 1 }}>
+                                <p style={{ fontSize: '0.85rem', fontWeight: '700' }}>Order #ORD-{o.id}</p>
+                                <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{new Date(o.created_at).toLocaleDateString()} • {o.status.toUpperCase()}</p>
+                            </div>
+                            <div style={{ textAlign: 'right' }}>
+                                <p style={{ fontSize: '0.85rem', fontWeight: '800' }}>₱{parseFloat(o.total_price).toLocaleString()}</p>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            ) : (
+                <div style={{ textAlign: 'center', color: 'var(--text-muted)' }}>
+                    <ShoppingCart size={40} style={{ opacity: 0.2, marginBottom: '12px' }} />
+                    <p style={{ fontSize: '0.85rem' }}>No recent purchases. Start sourcing today!</p>
+                    <button onClick={() => navigate('/marketplace')} className="btn btn-primary" style={{ marginTop: '12px', padding: '8px 16px', fontSize: '0.8rem' }}>Marketplace</button>
+                </div>
+            )}
         </div>
       </section>
 
