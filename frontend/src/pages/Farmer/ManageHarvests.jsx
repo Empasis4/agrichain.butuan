@@ -138,6 +138,13 @@ const ManageHarvests = ({ user }) => {
               type="number" placeholder="Available Quantity" required className="input" 
               value={newProduct.quantity_available} onChange={e => setNewProduct({...newProduct, quantity_available: e.target.value})}
             />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <label style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: '600', paddingLeft: '4px' }}>Harvest Date</label>
+                <input 
+                  type="date" required className="input" 
+                  value={newProduct.harvest_date} onChange={e => setNewProduct({...newProduct, harvest_date: e.target.value})}
+                />
+            </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
                 <input 
                   type="checkbox" 
