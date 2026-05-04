@@ -103,22 +103,46 @@ const Register = ({ onRegister }) => {
           style={{ width: '100%', padding: '14px 16px', borderRadius: '12px', border: '1px solid #ddd', outline: 'none' }}
         />
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            <label style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-                {role === 'farmer' ? "Upload Farmer ID (Image URL/Base64)" : "Upload Business Permit (Image URL/Base64)"}
+            <label style={{ fontSize: '0.9rem', fontWeight: '700', color: 'var(--text-main)' }}>
+                {role === 'farmer' ? "Government Issued Farmer ID" : "Business Document (DTI/Permit)"}
             </label>
-            <input 
-              type="text" 
-              placeholder="Enter Image URL or attach later" 
-              value={role === 'farmer' ? (formData.farmer_id_image || '') : (formData.permit_image || '')}
-              onChange={(e) => {
-                  if (role === 'farmer') {
-                      setFormData({...formData, farmer_id_image: e.target.value});
-                  } else {
-                      setFormData({...formData, permit_image: e.target.value});
-                  }
+            <div 
+              onClick={() => document.getElementById('verification-file-upload').click()}
+              style={{ 
+                width: '100%', height: '100px', border: '2px dashed #ddd', borderRadius: '12px', 
+                display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', 
+                cursor: 'pointer', background: '#fcfcfc', overflow: 'hidden', position: 'relative'
               }}
-              style={{ width: '100%', padding: '14px 16px', borderRadius: '12px', border: '1px solid #ddd', outline: 'none' }}
-            />
+            >
+                {(role === 'farmer' ? formData.farmer_id_image : formData.permit_image) ? (
+                    <img 
+                        src={role === 'farmer' ? formData.farmer_id_image : formData.permit_image} 
+                        style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+                    />
+                ) : (
+                    <>
+                        <ChevronRight size={24} color="#aaa" />
+                        <span style={{ fontSize: '0.85rem', color: '#aaa', marginTop: '4px' }}>Click to Go to Files</span>
+                    </>
+                )}
+                <input 
+                  id="verification-file-upload" type="file" accept="image/*" hidden 
+                  onChange={(e) => {
+                    const file = e.target.files[0];
+                    if (file) {
+                      const reader = new FileReader();
+                      reader.onloadend = () => {
+                        if (role === 'farmer') {
+                          setFormData({...formData, farmer_id_image: reader.result});
+                        } else {
+                          setFormData({...formData, permit_image: reader.result});
+                        }
+                      };
+                      reader.readAsDataURL(file);
+                    }
+                  }}
+                />
+            </div>
         </div>
         <input 
           type="password" 
