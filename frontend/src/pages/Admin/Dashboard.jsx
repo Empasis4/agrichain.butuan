@@ -36,7 +36,7 @@ const AdminDashboard = ({ user }) => {
 
   const fetchNotifications = async () => {
     try {
-      const res = await axios.get('/api/notifications?user_id=1');
+      const res = await axios.get(`/api/notifications?user_id=${user.id}`);
       setNotifications(Array.isArray(res.data) ? res.data.slice(0, 5) : []);
     } catch (err) {
       console.error('Admin notif error:', err);

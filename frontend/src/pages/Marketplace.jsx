@@ -129,10 +129,10 @@ const Marketplace = ({ user }) => {
                 <span className={`badge badge-${product.badge || 'primary'}`}>{product.badge || 'Fresh'}</span>
               </div>
               <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '2px' }}>
-                <MapPin size={12} /> {product.location || 'Butuan City'}
+                <MapPin size={12} /> {product.farmer?.address || 'Butuan City'}
               </p>
-              <p style={{ fontSize: '0.8rem', color: 'var(--primary)', fontWeight: '600', marginBottom: '4px' }}>
-                {typeof product.farmer === 'object' ? product.farmer?.name : (product.farmer || 'Local Farmer')}
+              <p style={{ fontSize: '0.8rem', color: 'var(--primary)', fontWeight: '700', marginBottom: '4px' }}>
+                {product.farmer?.name || 'AgriChain Farmer'}
               </p>
               <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '8px' }}>
                 Stock: <span style={{ color: 'var(--text-main)', fontWeight: '700' }}>{product.quantity_available} {product.unit}</span> available

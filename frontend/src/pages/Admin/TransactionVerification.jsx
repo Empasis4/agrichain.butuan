@@ -33,8 +33,9 @@ const TransactionVerification = () => {
       showToast('Payment Verified Successfully!', 'success');
       if (selectedTxn) setSelectedTxn(null);
     } catch (error) {
-      console.error('Verification error:', error);
-      showToast('Error verifying payment. Please try again.', 'error');
+      const msg = error.response?.data?.message || error.message;
+      console.error('Verification error:', msg);
+      showToast(`Error: ${msg}`, 'error');
     }
   };
 
