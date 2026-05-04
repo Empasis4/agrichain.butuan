@@ -145,9 +145,9 @@ const Profile = ({ user, onLogout }) => {
                         justifyContent: 'center', cursor: 'pointer', background: '#fcfcfc', overflow: 'hidden'
                     }}
                 >
-                    {user.permit_path ? (
+                    {user.permit_image ? (
                         <div style={{ position: 'relative', width: '100%', height: '100%' }}>
-                            <img src={user.permit_path} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                            <img src={user.permit_image} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
                             <div style={{ position: 'absolute', top: '8px', right: '8px', background: 'rgba(0,0,0,0.5)', color: '#fff', padding: '4px 8px', borderRadius: '4px', fontSize: '0.7rem' }}>Click to Update</div>
                         </div>
                     ) : (
@@ -165,8 +165,8 @@ const Profile = ({ user, onLogout }) => {
                             const reader = new FileReader();
                             reader.onloadend = async () => {
                                 try {
-                                    await axios.put(`/api/users/${user.id}`, { permit_path: reader.result });
-                                    const updatedUser = {...user, permit_path: reader.result};
+                                    await axios.put(`/api/users/${user.id}`, { permit_image: reader.result });
+                                    const updatedUser = {...user, permit_image: reader.result};
                                     localStorage.setItem('agrichain_user', JSON.stringify(updatedUser));
                                     alert('Document uploaded successfully! Admin will review your account.');
                                     window.location.reload();
