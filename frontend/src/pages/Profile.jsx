@@ -68,11 +68,65 @@ const Profile = ({ user, onLogout }) => {
             <h2 style={{ fontSize: '1rem', marginBottom: '16px', fontWeight: '700' }}>Settings & Preferences</h2>
             
             {user.role === 'farmer' && (
-                <div style={{ marginBottom: '16px' }}>
-                    <p style={{ fontSize: '0.85rem', fontWeight: '600', marginBottom: '8px' }}>GCash Payment Info</p>
-                    <input type="text" placeholder="GCash Number" defaultValue={user.gcash_number || ''} style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #ddd', marginBottom: '8px', fontSize: '0.85rem' }} />
-                    <input type="text" placeholder="GCash QR Code (Image URL/Base64)" defaultValue={user.gcash_qr || ''} style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #ddd', fontSize: '0.85rem' }} />
-                    <button className="btn btn-primary" style={{ marginTop: '8px', padding: '8px 16px', fontSize: '0.8rem' }}>Save GCash Info</button>
+                <div style={{ marginBottom: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    <p style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-main)' }}>Payment Integration</p>
+                    <div>
+                        <label style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>GCash Mobile Number</label>
+                        <input 
+                            id="gcash-number-input"
+                            type="text" 
+                            placeholder="09XXXXXXXXX" 
+                            defaultValue={user.gcash_number || ''} 
+                            style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #ddd', marginTop: '4px', fontSize: '0.85rem' }} 
+                        />
+                    </div>
+                    <div>
+                        <label style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>GCash QR Code</label>
+                        <div 
+                            onClick={() => document.getElementById('gcash-qr-upload').click()}
+                            style={{ 
+                                width: '100%', height: '140px', border: '2px dashed #ddd', borderRadius: '12px', 
+                                marginTop: '4px', display: 'flex', flexDirection: 'column', alignItems: 'center', 
+                                justifyContent: 'center', cursor: 'pointer', background: '#fcfcfc', overflow: 'hidden'
+                            }}
+                        >
+                            {user.gcash_qr ? (
+                                <img src={user.gcash_qr} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                            ) : (
+                                <span style={{ fontSize: '0.8rem', color: '#999' }}>Click to Attach QR Image</span>
+                            )}
+                        </div>
+                        <input 
+                            id="gcash-qr-upload" type="file" accept="image/*" hidden 
+                            onChange={(e) => {
+                                const file = e.target.files[0];
+                                if (file) {
+                                    const reader = new FileReader();
+                                    reader.onloadend = () => {
+                                        const updatedUser = {...user, gcash_qr: reader.result};
+                                        localStorage.setItem('agrichain_user', JSON.stringify(updatedUser));
+                                        window.location.reload();
+                                    };
+                                    reader.readAsDataURL(file);
+                                }
+                            }}
+                        />
+                    </div>
+                    <button 
+                        className="btn btn-primary" 
+                        style={{ marginTop: '8px' }}
+                        onClick={async () => {
+                            const num = document.getElementById('gcash-number-input').value;
+                            const updatedUser = {...user, gcash_number: num};
+                            try {
+                                await axios.put(`/api/users/${user.id}`, { gcash_number: num, gcash_qr: user.gcash_qr });
+                                localStorage.setItem('agrichain_user', JSON.stringify(updatedUser));
+                                alert('Payment information saved successfully!');
+                            } catch (err) { alert('Error saving info'); }
+                        }}
+                    >
+                        Save Payment Settings
+                    </button>
                 </div>
             )}
             
