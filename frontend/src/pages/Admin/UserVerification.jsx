@@ -71,6 +71,17 @@ const UserVerification = () => {
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.9rem', color: 'var(--text-main)', fontWeight: '500' }}>
                   <FileText size={16} color="var(--primary)" /> Proof: <span style={{ color: 'var(--primary)', fontWeight: '700' }}>{u.verification_id || 'Not Provided'}</span>
                 </div>
+                {u.permit_path && (
+                  <div style={{ marginTop: '10px' }}>
+                    <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '4px' }}>Attached Permit/ID:</p>
+                    <img 
+                      src={u.permit_path} 
+                      alt="User Permit" 
+                      style={{ width: '100%', borderRadius: '8px', cursor: 'pointer', border: '1px solid #eee' }} 
+                      onClick={() => window.open(u.permit_path, '_blank')}
+                    />
+                  </div>
+                )}
               </div>
 
               <div style={{ display: 'flex', gap: '12px' }}>

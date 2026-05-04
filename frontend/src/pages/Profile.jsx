@@ -134,36 +134,51 @@ const Profile = ({ user, onLogout }) => {
                 </div>
             )}
             
-            {user.role === 'retailer' && (
-                <div style={{ marginBottom: '16px' }}>
-                    <p style={{ fontSize: '0.85rem', fontWeight: '600', marginBottom: '8px' }}>Default Delivery Address</p>
-                    <input 
-                        id="default-address-input"
-                        type="text" 
-                        placeholder="Enter default address..." 
-                        defaultValue={user.default_delivery_address || ''} 
-                        style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #ddd', fontSize: '0.85rem' }} 
-                    />
-                    <button 
-                        className="btn btn-primary" 
-                        style={{ marginTop: '8px', padding: '8px 16px', fontSize: '0.8rem' }}
-                        onClick={async () => {
-                            const addr = document.getElementById('default-address-input').value;
-                            try {
-                                await axios.put(`/api/users/${user.id}`, { default_delivery_address: addr });
-                                const updatedUser = {...user, default_delivery_address: addr};
-                                localStorage.setItem('agrichain_user', JSON.stringify(updatedUser));
-                                alert('Delivery address updated successfully!');
-                                window.location.reload();
-                            } catch (err) {
-                                alert('Error updating address');
-                            }
-                        }}
-                    >
-                        Save Address
-                    </button>
+            {/* Permit Attachment Section */}
+            <div style={{ marginTop: '24px', paddingTop: '16px', borderTop: '1px solid #eee' }}>
+                <p style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-main)', marginBottom: '12px' }}>Operational Documents</p>
+                <div 
+                    onClick={() => document.getElementById('permit-upload').click()}
+                    style={{ 
+                        width: '100%', height: '160px', border: '2px dashed #ddd', borderRadius: '12px', 
+                        display: 'flex', flexDirection: 'column', alignItems: 'center', 
+                        justifyContent: 'center', cursor: 'pointer', background: '#fcfcfc', overflow: 'hidden'
+                    }}
+                >
+                    {user.permit_path ? (
+                        <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+                            <img src={user.permit_path} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                            <div style={{ position: 'absolute', top: '8px', right: '8px', background: 'rgba(0,0,0,0.5)', color: '#fff', padding: '4px 8px', borderRadius: '4px', fontSize: '0.7rem' }}>Click to Update</div>
+                        </div>
+                    ) : (
+                        <>
+                            <FileText size={32} color="#ccc" style={{ marginBottom: '8px' }} />
+                            <span style={{ fontSize: '0.8rem', color: '#999', textAlign: 'center', padding: '0 20px' }}>Upload Business Permit or Valid ID for Verification</span>
+                        </>
+                    )}
                 </div>
-            )}
+                <input 
+                    id="permit-upload" type="file" accept="image/*" hidden 
+                    onChange={(e) => {
+                        const file = e.target.files[0];
+                        if (file) {
+                            const reader = new FileReader();
+                            reader.onloadend = async () => {
+                                try {
+                                    await axios.put(`/api/users/${user.id}`, { permit_path: reader.result });
+                                    const updatedUser = {...user, permit_path: reader.result};
+                                    localStorage.setItem('agrichain_user', JSON.stringify(updatedUser));
+                                    alert('Document uploaded successfully! Admin will review your account.');
+                                    window.location.reload();
+                                } catch (err) {
+                                    alert('Error uploading document');
+                                }
+                            };
+                            reader.readAsDataURL(file);
+                        }
+                    }}
+                />
+            </div>
 
             <div style={{ marginTop: '24px', paddingTop: '16px', borderTop: '1px solid #eee' }}>
                 <p style={{ fontSize: '0.85rem', fontWeight: '600', color: '#D32F2F', marginBottom: '8px' }}>Danger Zone</p>

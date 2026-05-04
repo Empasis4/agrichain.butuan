@@ -19,7 +19,35 @@ const Checkout = ({ user: userProp }) => {
   const [paymentReference, setPaymentReference] = useState('');
   const [paymentProof, setPaymentProof] = useState('');
 
-  const shippingFee = 150;
+  // Coordinates for Butuan Barangays (Mock for simulation)
+  const barangayCoords = {
+    'libertad': [8.9419, 125.5222],
+    'ambago': [8.9556, 125.5111],
+    'villakananga': [8.9278, 125.5389],
+    'bayanihan': [8.9486, 125.5361],
+    'holy redeemer': [8.9583, 125.5333],
+    'leon kilat': [8.9472, 125.5417],
+    'san ignacio': [8.9444, 125.5472],
+    'default': [8.9475, 125.5406]
+  };
+
+  const getCoords = (name) => {
+    const key = (name || '').toLowerCase().replace(/\s/g, '');
+    for (let k in barangayCoords) {
+        if (key.includes(k)) return barangayCoords[k];
+    }
+    return barangayCoords['default'];
+  };
+
+  const farmerPos = getCoords(product.barangay || product.location);
+  const retailerPos = getCoords(deliveryAddress);
+
+  // Automated Shipping Fee Calculation
+  // Base ₱100 + ₱20 per km (simulated) + ₱5 per quantity
+  const distance = Math.sqrt(Math.pow(farmerPos[0]-retailerPos[0], 2) + Math.pow(farmerPos[1]-retailerPos[1], 2)) * 111; // Approx km
+  const calculatedShipping = Math.max(120, Math.round(100 + (distance * 15) + (quantity * 2)));
+
+  const shippingFee = calculatedShipping;
   const maxQty = parseFloat(product?.quantity_available) || 999;
   const pricePerUnit = parseFloat(product?.price_per_kg) || 0;
   const subtotal = pricePerUnit * quantity;
@@ -32,24 +60,31 @@ const Checkout = ({ user: userProp }) => {
 
     // Initialize Leaflet Map
     if (window.L && !mapInstance.current) {
-        mapInstance.current = window.L.map('checkout-map').setView([8.9475, 125.5406], 13); // Center of Butuan
+        mapInstance.current = window.L.map('checkout-map').setView([8.9475, 125.5406], 13);
         window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© OpenStreetMap contributors'
+            attribution: '© OpenStreetMap'
         }).addTo(mapInstance.current);
 
-        // Add markers
-        const farmerMarker = window.L.marker([8.95, 125.53]).addTo(mapInstance.current)
-            .bindPopup(`Farmer: ${product.farmer?.name || 'Local Farmer'}`).openPopup();
+        // Dynamic Markers
+        const farmerMarker = window.L.marker(farmerPos).addTo(mapInstance.current)
+            .bindPopup(`<b>Pick-up:</b> ${product.farmer?.name || 'Farmer'} (${product.barangay || 'Farm Area'})`).openPopup();
         
-        const retailerMarker = window.L.marker([8.94, 125.55]).addTo(mapInstance.current)
-            .bindPopup('Your Delivery Location');
+        const retailerMarker = window.L.marker(retailerPos).addTo(mapInstance.current)
+            .bindPopup(`<b>Drop-off:</b> ${user.name || 'You'} (${deliveryAddress})`);
 
-        // Draw a simple line (simulated route)
-        const latlngs = [
-            [8.95, 125.53],
-            [8.94, 125.55]
-        ];
-        window.L.polyline(latlngs, {color: 'var(--primary)', weight: 4, dashArray: '10, 10'}).addTo(mapInstance.current);
+        // Live Route Path
+        const latlngs = [farmerPos, retailerPos];
+        window.L.polyline(latlngs, {
+            color: 'var(--primary)', 
+            weight: 5, 
+            opacity: 0.7,
+            dashArray: '10, 15',
+            lineJoin: 'round'
+        }).addTo(mapInstance.current);
+
+        // Fit map to bounds
+        const bounds = window.L.latLngBounds(latlngs);
+        mapInstance.current.fitBounds(bounds, { padding: [50, 50] });
     }
 
     return () => {
@@ -58,7 +93,7 @@ const Checkout = ({ user: userProp }) => {
             mapInstance.current = null;
         }
     };
-  }, [product]);
+  }, [product, deliveryAddress]);
 
   if (!product) {
     return (
